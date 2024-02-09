@@ -38,7 +38,6 @@ export const language: monaco.languages.IMonarchLanguage = {
     defaultToken: "",
     tokenPostfix: ".lua",
 
-    // @ts-ignore
     keywords: [
         "and",
         "break",
@@ -64,11 +63,13 @@ export const language: monaco.languages.IMonarchLanguage = {
         "while",
         "continue",
     ],
+
     brackets: [
         { token: "delimiter.bracket", open: "{", close: "}" },
         { token: "delimiter.array", open: "[", close: "]" },
         { token: "delimiter.parenthesis", open: "(", close: ")" },
     ],
+
     operators: [
         "+",
         "-",
@@ -97,7 +98,8 @@ export const language: monaco.languages.IMonarchLanguage = {
     ],
     // we include these common regular expressions
     symbols: /[=><!~?:&|+\-*\/\^%]+/,
-    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+    escapes:
+        /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
     // The main tokenizer for our languages
     tokenizer: {
         root: [

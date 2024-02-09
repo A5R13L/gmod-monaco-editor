@@ -3,5 +3,9 @@
     "editor.tabSize": 4,
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "workbench.colorCustomizations": {
+        "minimap.background": "#00000000",
+        "scrollbar.shadow": "#00000000"
+    }
 }

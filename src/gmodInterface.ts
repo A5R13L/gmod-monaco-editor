@@ -3,7 +3,7 @@ import { LuaReport } from "./luacheckCompat";
 import { EditorSession, EditorSessionObject } from "./editorSession";
 import { GmodInterfaceValue } from "./glua/GmodInterfaceValue";
 import { autocompletionData, ResetAutocomplete } from "./autocompletionData";
-import { LoadAutocompletionData } from "./glua/Gwiki";
+import { LoadAutocompletionData, AddCustomData } from "./glua/Gwiki";
 
 declare global {
     namespace globalThis {
@@ -16,11 +16,10 @@ interface GmodInterface {
     OnReady(): void;
     OnCode(code: string, versionId: number): void;
     OpenURL(url: string): void;
+    OnThemeChanged(theme: string): void;
     OnSessionSet(session: object): void;
     OnAction(actionId: string): void;
     OnSessions(sessions: object[]): void;
-    OnThemesLoaded(themes: string[]): void;
-    OnLanguages(langs: string[], populatedLangs: monaco.languages.ILanguageExtensionPoint[]): void;
 }
 
 interface ExtendedGmodInterface extends GmodInterface {
@@ -45,6 +44,7 @@ interface ExtendedGmodInterface extends GmodInterface {
     LoadSnippets(snippets: { name: string; code: string }[]): void;
     AddAction(action: EditorAction): void;
     LoadAutocompleteState(state: string): Promise<void>;
+    AddCustomData(elems: any[]): void;
     ResetAutocompletion(): void;
     GetSessions(): void;
 }
@@ -69,14 +69,15 @@ interface EditorAction {
     contextMenuGroup: string;
 }
 
-// globalThis.gmodinterface = {
-//     OnReady: console.log,
-//     OnCode: console.log,
-//     OpenURL: console.log,
-//     OnSessionSet: console.log,
-//     OnAction: console.log,
-//     OnSessions: console.log,
-// };
+globalThis.gmodinterface = {
+    OnReady: console.log,
+    OnCode: console.log,
+    OpenURL: console.log,
+    OnThemeChanged: console.log,
+    OnSessionSet: console.log,
+    OnAction: console.log,
+    OnSessions: console.log,
+};
 
 let maybeGmodInterface: ExtendedGmodInterface | undefined;
 if (globalThis.gmodinterface) {
@@ -85,7 +86,7 @@ if (globalThis.gmodinterface) {
 
         SetEditor(editor: monaco.editor.IStandaloneCodeEditor): void {
             this.editor = editor;
-            // Need to expose editor to gmod to have some more JS HACKS
+
             globalThis.editor = editor;
 
             editor.onDidChangeModelContent(() => {
@@ -94,6 +95,7 @@ if (globalThis.gmodinterface) {
                     editor.getModel()!.getAlternativeVersionId()
                 );
             });
+
             // @ts-ignore
             editor.getContribution("editor.linkDetector").openerService.open = (
                 url: string
@@ -104,16 +106,13 @@ if (globalThis.gmodinterface) {
 
         SetCode(code: string, keepViewState: boolean = false): void {
             let viewState: monaco.editor.ICodeEditorViewState;
-            if (keepViewState) {
-                viewState = this.editor!.saveViewState()!;
-            }
+
+            if (keepViewState) viewState = this.editor!.saveViewState()!;
+
             this.editor!.setValue(code);
-            if (keepViewState) {
-                this.editor!.restoreViewState(viewState!);
-            }
-            if (currentSession) {
-                this.SaveSession();
-            }
+
+            if (keepViewState) this.editor!.restoreViewState(viewState!);
+            if (currentSession) this.SaveSession();
         },
 
         SetTheme(themeName: string): void {
@@ -129,14 +128,15 @@ if (globalThis.gmodinterface) {
                 lineNumber,
                 column: 1,
             };
+
             this.editor!.setPosition(position);
+
             this.editor!.revealPositionInCenterIfOutsideViewport(
                 position,
                 monaco.editor.ScrollType.Smooth
             );
         },
 
-        // the LuaReport object must be passed from the gmod lua state :v
         SubmitLuaReport(report: LuaReport): void {
             let markers: monaco.editor.IMarkerData[] = report.events.map(
                 (e) => {
@@ -164,38 +164,50 @@ if (globalThis.gmodinterface) {
             currentSession!.code = this.editor!.getValue();
             currentSession!.model = this.editor!.getModel()!;
             currentSession!.viewState = this.editor!.saveViewState()!;
+
             sessions.set(currentSession!.name, currentSession!);
         },
 
         RenameSession(newName: string, oldName?: string) {
             if (!currentSession || (oldName && !sessions.has(oldName))) {
                 console.error("Cant find session to rename");
+
                 return;
             }
+
             if (sessions.has(newName)) {
                 console.error("Cant rename session, name already taken");
+
                 return;
             }
             const session = oldName ? sessions.get(oldName) : currentSession;
+
             sessions.delete(session!.name);
+
             session!.name = newName;
+
             sessions.set(newName, session!);
         },
         SetSession(name: string) {
             if (!sessions.has(name)) {
                 console.error(`Cant find session named ${name}`);
+
                 return;
             }
-            if (currentSession) {
-                this.SaveSession();
-            }
+
+            if (currentSession) this.SaveSession();
+
             const session = sessions.get(name)!;
+
             this.editor!.setModel(session.model);
-            if (session!.viewState) {
+
+            if (session!.viewState)
                 this.editor!.restoreViewState(session.viewState);
-            }
+
             currentSession = session;
+
             this.OnSessionSet(session.getSerializable());
+
             monaco.editor.setModelMarkers(
                 this.editor!.getModel()!,
                 "luacheck",
@@ -207,14 +219,18 @@ if (globalThis.gmodinterface) {
             sessionObj: EditorSessionObject
         ): EditorSession | undefined {
             const session = EditorSession.fromObject(sessionObj);
+
             if (sessions.has(session.name)) {
                 console.error(
                     `Cant add session named ${session.name}, name already taken`
                 );
-                return undefined;
+
+                return;
             }
+
             sessions.set(session.name, session);
             this.SetSession(session.name);
+
             return session;
         },
 
@@ -223,39 +239,43 @@ if (globalThis.gmodinterface) {
                 console.error(
                     `Cant close session named ${sessionName}, it does not exist`
                 );
+
                 return;
             }
+
             const session = sessionName
                 ? sessions.get(sessionName)!
                 : currentSession!;
+
             sessions.delete(session.name);
+
             if (session === currentSession) {
                 currentSession = undefined;
-                if (switchTo && sessions.has(switchTo)) {
+
+                if (switchTo && sessions.has(switchTo))
                     this.SetSession(switchTo);
-                } else {
-                    this.CreateSession({ code: "-- empty :c" });
-                }
+                else this.CreateSession({ code: "" });
             }
+
             session.model.dispose();
         },
 
         LoadSessions(list: EditorSessionObject[], newActive?: string): void {
             list.forEach((sessionObj) => {
                 const session = EditorSession.fromObject(sessionObj);
+
                 sessions.set(session.name, session);
             });
-            if (newActive) {
-                this.SetSession(newActive);
-            }
+
+            if (newActive) this.SetSession(newActive);
         },
 
         SetSessionCode(sessionName: string, code: string): void {
-            if (!sessions.has(sessionName)) {
+            if (!sessions.has(sessionName))
                 console.error(
                     `Cant set code for session session named ${sessionName}, it does not exist`
                 );
-            }
+
             sessions.get(sessionName)?.model.setValue(code);
         },
 
@@ -278,52 +298,65 @@ if (globalThis.gmodinterface) {
         LoadAutocomplete(clData: ClientAutocompleteData): void {
             // Build caches first to avoid duplicates
             autocompletionData.interfaceValues = [];
+
             autocompletionData.GenerateMethodsCache();
             autocompletionData.GenerateGlobalCache();
+
             const values = clData.values.split("|");
             const funcs = clData.funcs.split("|");
             const tables: string[] = [];
+
             values.forEach((value: string) => {
                 let name = value;
+
                 if (value.indexOf(".") !== -1) {
                     const split = value.split(".");
+
                     name = split.pop()!;
+
                     const tableName = split.join(".");
-                    if (tables.indexOf(tableName) === -1) {
+
+                    if (tables.indexOf(tableName) === -1)
                         tables.push(tableName);
-                    }
                 }
-                if (!autocompletionData.valuesLookup.has(value)) {
+
+                if (!autocompletionData.valuesLookup.has(value))
                     autocompletionData.AddNewInterfaceValue(
                         new GmodInterfaceValue({
                             name,
                             fullname: value,
                         })
                     );
-                }
             });
+
             funcs.forEach((func: string) => {
                 let name = func;
                 let classFunction = false;
                 let type = "Function";
                 let parent = undefined;
+
                 if (func.indexOf(".") !== -1) {
                     const split = func.split(".");
+
                     name = split.pop()!;
+
                     const tableName = split.join(".");
-                    if (tables.indexOf(tableName) === -1) {
+
+                    if (tables.indexOf(tableName) === -1)
                         tables.push(tableName);
-                    }
                 } else if (func.indexOf(":") !== -1) {
                     const split = func.split(":");
+
                     parent = split[1];
                     name = split.pop()!;
                     classFunction = true;
                     type = "Method";
                 }
+
                 if (classFunction) {
                     if (autocompletionData.methodsLookup.has(name)) {
                         let found = false;
+
                         autocompletionData.methodsLookup
                             .get(name)
                             ?.forEach((method) => {
@@ -331,10 +364,10 @@ if (globalThis.gmodinterface) {
                                     found = true;
                                 }
                             });
-                        if (found) {
-                            return;
-                        }
+
+                        if (found) return;
                     }
+
                     autocompletionData.AddNewInterfaceValue(
                         new GmodInterfaceValue({
                             name,
@@ -344,25 +377,23 @@ if (globalThis.gmodinterface) {
                             type,
                         })
                     );
-                } else {
-                    if (!autocompletionData.valuesLookup.has(func)) {
-                        autocompletionData.AddNewInterfaceValue(
-                            new GmodInterfaceValue({
-                                name,
-                                parent,
-                                fullname: func,
-                                classFunction,
-                                type,
-                            })
-                        );
-                    }
-                }
+                } else if (!autocompletionData.valuesLookup.has(func))
+                    autocompletionData.AddNewInterfaceValue(
+                        new GmodInterfaceValue({
+                            name,
+                            parent,
+                            fullname: func,
+                            classFunction,
+                            type,
+                        })
+                    );
             });
+
             tables.forEach((table) => {
-                if (autocompletionData.modules.indexOf(table) === -1) {
+                if (autocompletionData.modules.indexOf(table) === -1)
                     autocompletionData.modules.push(table);
-                }
             });
+
             autocompletionData.ClearAutocompleteCache();
         },
 
@@ -371,6 +402,7 @@ if (globalThis.gmodinterface) {
                 name,
                 code,
             });
+
             autocompletionData.ClearGlobalAutocompletionCache();
         },
 
@@ -381,11 +413,11 @@ if (globalThis.gmodinterface) {
                     code: snippet.code,
                 });
             });
+
             autocompletionData.ClearGlobalAutocompletionCache();
         },
 
         AddAction(action: EditorAction): void {
-            // {id: "Test", label: "Test", keyBindings: ["Mod.CtrlCmd | Key.F2"]}
             const newAction: monaco.editor.IActionDescriptor = {
                 id: action.id,
                 label: action.label,
@@ -395,40 +427,48 @@ if (globalThis.gmodinterface) {
                     this.OnAction(action.id);
                 },
             };
-            if (action.keyBindings) {
+
+            if (action.keyBindings)
                 action.keyBindings.forEach((obj: string) => {
                     obj = obj.replace(/Mod\./g, "monaco.KeyMod.");
                     obj = obj.replace(/Key\./g, "monaco.KeyCode.");
-                    // Not the best way to do it, but im too lazy
+
                     newAction.keybindings!.push(eval(obj));
                 });
-            }
+
             this.editor!.addAction(newAction);
         },
 
         LoadAutocompleteState(state: string): Promise<void> {
-            return new Promise<void>(function (resolve, reject) {
+            return new Promise<void>(function (resolve, _) {
                 LoadAutocompletionData(state).then(() => {
                     autocompletionData.ClearAutocompleteCache();
                     resolve();
                 });
             });
         },
+
+        AddCustomData(elems: any[]): void {
+            AddCustomData(elems);
+        },
+
         ResetAutocompletion(): void {
             ResetAutocomplete();
         },
 
         GetSessions(): void {
             this.SaveSession();
+
             const serializableSessions: object[] = [];
+
             sessions.forEach((session: EditorSession) => {
                 serializableSessions.push(session.getSerializable());
             });
+
             this.OnSessions(serializableSessions);
         },
     };
 
-    // give gmod access to the extended interface
     globalThis.gmodinterface = maybeGmodInterface;
 }
 

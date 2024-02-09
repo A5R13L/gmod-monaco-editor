@@ -8,9 +8,11 @@ export class GluaEnum extends GluaItem {
     tableDesc!: string;
     realm!: string;
     realms: string[] | undefined;
+
     constructor(jsonObj: object) {
         super(jsonObj);
     }
+
     generateDocumentation(): monaco.IMarkdownString[] {
         return [
             { value: `Value: \`${this.value}\`` },
@@ -18,9 +20,11 @@ export class GluaEnum extends GluaItem {
             { value: this.tableDesc || "No description" },
         ];
     }
+
     getDetail(): string {
         return `${this.text || ""}\n\n${this.tableDesc || "No description"}`;
     }
+
     getFullName() {
         return this.key;
     }

@@ -2,7 +2,8 @@ import * as monaco from "monaco-editor";
 import { formatText } from "lua-fmt";
 
 export class GLuaFormatter
-    implements monaco.languages.DocumentFormattingEditProvider {
+    implements monaco.languages.DocumentFormattingEditProvider
+{
     displayName?: string;
 
     provideDocumentFormattingEdits(
@@ -11,6 +12,7 @@ export class GLuaFormatter
         token: monaco.CancellationToken
     ): monaco.languages.ProviderResult<monaco.languages.TextEdit[]> {
         let code: string = model.getValue();
+
         return [
             {
                 eol: monaco.editor.EndOfLineSequence.LF,

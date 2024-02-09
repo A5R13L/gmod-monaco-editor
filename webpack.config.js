@@ -1,13 +1,11 @@
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const webpack = require("webpack");
 const path = require("path");
 
 module.exports = {
     mode: "production",
     entry: {
         index: "./src/index.ts",
-        repl: "./src/repl.ts",
     },
     resolve: {
         extensions: [".ts", ".js"],
@@ -39,20 +37,15 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: "views/index.html",
             chunks: ["index"],
-        }),
-        new HtmlWebpackPlugin({
-            filename: "repl.html",
-            template: "views/repl.html",
-            chunks: ["repl"],
-        }),
+        })
     ],
 
-    devtool: "source-map",
+    devtool: "source-map", // source-map in production, eval in development
 
     devServer: {
         contentBase: path.join(__dirname, "dist"),
         port: 8080,
-        compress: true,
+        compress: true, // true in production, false in development
         disableHostCheck: true,
     },
 };

@@ -19,18 +19,15 @@ const buildinSnippets = [
     },
     {
         name: "forp",
-        code:
-            "for ${1:i},${2:v} in pairs(${3:table_name}) do\n${4:-- body}\nend",
+        code: "for ${1:i},${2:v} in pairs(${3:table_name}) do\n${4:-- body}\nend",
     },
     {
         name: "fori",
-        code:
-            "for ${1:i},${2:v} in ipairs(${3:table_name}) do\n${4:-- body}\nend",
+        code: "for ${1:i},${2:v} in ipairs(${3:table_name}) do\n${4:-- body}\nend",
     },
     {
         name: "hookadd",
-        code:
-            'local function ${1:hookname}(${3:...})\n${4:-- body}\nend\nhook.Add("${1:hookname}",${2:Tag},${1:hookname})',
+        code: 'local function ${1:hookname}(${3:...})\n${4:-- body}\nend\nhook.Add("${1:hookname}",${2:Tag},${1:hookname})',
     },
 ];
 const buildinConstants = ["SERVER", "CLIENT", "_G", "_VERSION", "VERSION"];
@@ -68,17 +65,21 @@ class AutocompletionData {
     hooks: GluaFunc[] = [];
     modules: string[] = [];
     interfaceValues: GmodInterfaceValue[] = [];
+
     snippets: {
         name: string;
         code: string;
     }[] = buildinSnippets;
+
     enums: GluaEnum[] = [];
     valuesLookup: Map<string, GluaItem> = new Map();
     methodsLookup: Map<string, GluaItem[]> = new Map();
     globalCache: monaco.languages.CompletionItem[] = [];
     methodsCache: monaco.languages.CompletionItem[] = [];
+
     GenerateGlobalCache() {
         this.globalCache = [];
+
         autocompletionData.functions.forEach((func: GluaFunc) => {
             const item = {
                 label: func.getFullName(),
@@ -88,17 +89,19 @@ class AutocompletionData {
                 insertText: func.generateUsageSnippet(),
                 insertTextRules: func.hasArgs()
                     ? monaco.languages.CompletionItemInsertTextRule
-                        .InsertAsSnippet
+                          .InsertAsSnippet
                     : monaco.languages.CompletionItemInsertTextRule
-                        .KeepWhitespace,
+                          .KeepWhitespace,
                 tags:
                     func.description.deprecated !== undefined
                         ? [monaco.languages.CompletionItemTag.Deprecated]
                         : [],
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.enums.forEach((enumObj: GluaEnum) => {
             const item = {
                 label: enumObj.key,
@@ -111,8 +114,10 @@ class AutocompletionData {
                         .KeepWhitespace,
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.snippets.forEach((snippet) => {
             const item = {
                 label: snippet.name,
@@ -123,8 +128,10 @@ class AutocompletionData {
                         .InsertAsSnippet,
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.constants.forEach((constant) => {
             const item = {
                 label: constant,
@@ -132,8 +139,10 @@ class AutocompletionData {
                 insertText: constant,
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.keywords.forEach((keyword) => {
             const item = {
                 label: keyword,
@@ -141,8 +150,10 @@ class AutocompletionData {
                 insertText: keyword,
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.modules.forEach((moduleName: string) => {
             const item = {
                 label: moduleName,
@@ -153,13 +164,14 @@ class AutocompletionData {
                         .KeepWhitespace,
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.globalCache.push(item);
         });
+
         autocompletionData.interfaceValues.forEach(
             (interfaceValue: GmodInterfaceValue) => {
-                if (interfaceValue.classFunction) {
-                    return;
-                }
+                if (interfaceValue.classFunction) return;
+
                 const item = {
                     label: interfaceValue.fullname,
                     kind: interfaceValue.getCompletionKind(),
@@ -170,10 +182,12 @@ class AutocompletionData {
                             .KeepWhitespace,
                     range: new monaco.Range(0, 0, 0, 0),
                 };
+
                 this.globalCache.push(item);
             }
         );
     }
+
     GenerateMethodsCache() {
         autocompletionData.classmethods.forEach((method: GluaFunc) => {
             const item = {
@@ -186,17 +200,19 @@ class AutocompletionData {
                 filterText: method.name,
                 insertTextRules: method.hasArgs()
                     ? monaco.languages.CompletionItemInsertTextRule
-                        .InsertAsSnippet
+                          .InsertAsSnippet
                     : monaco.languages.CompletionItemInsertTextRule
-                        .KeepWhitespace,
+                          .KeepWhitespace,
                 tags:
                     method.description.deprecated !== undefined
                         ? [monaco.languages.CompletionItemTag.Deprecated]
                         : [],
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.methodsCache.push(item);
         });
+
         autocompletionData.hooks.forEach((hook: GluaFunc) => {
             const item = {
                 label: hook.getFullName(),
@@ -206,22 +222,23 @@ class AutocompletionData {
                 insertText: hook.generateUsageSnippet(),
                 insertTextRules: hook.hasArgs()
                     ? monaco.languages.CompletionItemInsertTextRule
-                        .InsertAsSnippet
+                          .InsertAsSnippet
                     : monaco.languages.CompletionItemInsertTextRule
-                        .KeepWhitespace,
+                          .KeepWhitespace,
                 tags:
                     hook.description.deprecated !== undefined
                         ? [monaco.languages.CompletionItemTag.Deprecated]
                         : [],
                 range: new monaco.Range(0, 0, 0, 0),
             };
+
             this.methodsCache.push(item);
         });
+
         autocompletionData.interfaceValues.forEach(
             (interfaceValue: GmodInterfaceValue) => {
-                if (!interfaceValue.classFunction) {
-                    return;
-                }
+                if (!interfaceValue.classFunction) return;
+
                 const item = {
                     label: interfaceValue.fullname,
                     kind: interfaceValue.getCompletionKind(),
@@ -235,10 +252,12 @@ class AutocompletionData {
                             .KeepWhitespace,
                     range: new monaco.Range(0, 0, 0, 0),
                 };
+
                 this.methodsCache.push(item);
             }
         );
     }
+
     updateCacheRange(
         cache: monaco.languages.CompletionItem[],
         newRange: monaco.IRange
@@ -248,19 +267,19 @@ class AutocompletionData {
         });
     }
     globalAutocomplete(range: monaco.IRange): monaco.languages.CompletionList {
-        if (this.globalCache.length === 0) {
-            this.GenerateGlobalCache();
-        }
+        if (this.globalCache.length === 0) this.GenerateGlobalCache();
+
         this.updateCacheRange(this.globalCache, range);
+
         return {
             suggestions: this.globalCache,
         };
     }
     methodAutocomplete(range: monaco.IRange): monaco.languages.CompletionList {
-        if (this.methodsCache.length === 0) {
-            this.GenerateMethodsCache();
-        }
+        if (this.methodsCache.length === 0) this.GenerateMethodsCache();
+
         this.updateCacheRange(this.methodsCache, range);
+
         return {
             suggestions: this.methodsCache,
         };
@@ -270,10 +289,10 @@ class AutocompletionData {
         addQuotes: boolean
     ): monaco.languages.CompletionList {
         const hookSuggestions: monaco.languages.CompletionItem[] = [];
+
         autocompletionData.hooks.forEach((hook: GluaFunc) => {
-            if (hook.parent !== "GM") {
-                return;
-            }
+            if (hook.parent !== "GM") return;
+
             const item = {
                 label: `"${hook.name}"`,
                 kind: monaco.languages.CompletionItemKind.Event,
@@ -282,8 +301,10 @@ class AutocompletionData {
                 insertText: addQuotes ? `"${hook.name}"` : hook.name,
                 range,
             };
+
             hookSuggestions.push(item);
         });
+
         return {
             suggestions: hookSuggestions,
         };
@@ -291,33 +312,36 @@ class AutocompletionData {
     AddNewInterfaceValue(val: GmodInterfaceValue) {
         if (!val.fullname) {
             console.error("Cant add new value without a fullname");
+
             return;
         }
+
         if (
             buildinConstants.indexOf(val.fullname) !== -1 ||
             keywords.indexOf(val.fullname) !== -1
-        ) {
+        )
             return;
-        }
+
         autocompletionData.interfaceValues.push(val);
         autocompletionData.valuesLookup.set(val.fullname, val);
+
         if (val.classFunction) {
-            if (autocompletionData.methodsLookup.has(val.name)) {
+            if (autocompletionData.methodsLookup.has(val.name))
                 autocompletionData.methodsLookup.get(val.name)?.push(val);
-            } else {
-                autocompletionData.methodsLookup.set(val.name, [val]);
-            }
+            else autocompletionData.methodsLookup.set(val.name, [val]);
+
             this.ClearMethodsAutocompletionCache();
-        } else {
-            this.ClearGlobalAutocompletionCache();
-        }
+        } else this.ClearGlobalAutocompletionCache();
     }
+
     ClearMethodsAutocompletionCache() {
         this.methodsCache = [];
     }
+
     ClearGlobalAutocompletionCache() {
         this.globalCache = [];
     }
+
     ClearAutocompleteCache() {
         this.globalCache = [];
         this.methodsCache = [];
@@ -325,6 +349,7 @@ class AutocompletionData {
 }
 
 export let autocompletionData: AutocompletionData = new AutocompletionData();
+
 export function ResetAutocomplete() {
     autocompletionData = new AutocompletionData();
 }
