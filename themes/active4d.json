@@ -1,7 +1,7 @@
 {
     "base": "vs",
-    "name": "Active4D",
     "inherit": true,
+    "name": "Active4D",
     "rules": [
         {
             "background": "FFFFFF",
