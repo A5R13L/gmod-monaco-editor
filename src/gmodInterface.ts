@@ -69,15 +69,15 @@ interface EditorAction {
     contextMenuGroup: string;
 }
 
-globalThis.gmodinterface = {
-    OnReady: console.log,
-    OnCode: console.log,
-    OpenURL: console.log,
-    OnThemeChanged: console.log,
-    OnSessionSet: console.log,
-    OnAction: console.log,
-    OnSessions: console.log,
-};
+// globalThis.gmodinterface = {
+//     OnReady: console.log,
+//     OnCode: console.log,
+//     OpenURL: console.log,
+//     OnThemeChanged: console.log,
+//     OnSessionSet: console.log,
+//     OnAction: console.log,
+//     OnSessions: console.log,
+// };
 
 let maybeGmodInterface: ExtendedGmodInterface | undefined;
 if (globalThis.gmodinterface) {
