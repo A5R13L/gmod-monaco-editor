@@ -11,37 +11,41 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
         const lineUntil = model
             .getLineContent(position.lineNumber)
             .substring(0, position.column);
+
         const word = model.getWordAtPosition(position);
-        if (!word) {
-            return;
-        }
+
+        if (!word) return;
         let firstIdentifierWord = word;
         let currentIdentifier = word.word;
-        if (lineUntil.charAt(word.startColumn - 2) === ".") {
+
+        if (lineUntil.charAt(word.startColumn - 2) === ".")
             while (true) {
                 if (
                     lineUntil.charAt(firstIdentifierWord.startColumn - 2) !==
                     "."
-                ) {
+                )
                     break;
-                }
+
                 firstIdentifierWord = model.getWordUntilPosition({
                     lineNumber: position.lineNumber,
                     column: firstIdentifierWord.startColumn - 1,
                 });
+
                 currentIdentifier =
                     firstIdentifierWord.word + "." + currentIdentifier;
             }
-        } else if (
+        else if (
             lineUntil.charAt(word.startColumn - 2) === ":" &&
             autocompletionData.methodsLookup.has(word.word)
         ) {
             let conent: monaco.IMarkdownString[] = [];
+
             autocompletionData.methodsLookup
                 .get(word.word)
                 ?.forEach((method: GluaItem) => {
                     conent = conent.concat(method.generateDocumentation());
                 });
+
             return {
                 contents: conent,
                 range: new monaco.Range(
@@ -52,7 +56,8 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
                 ),
             };
         }
-        if (!autocompletionData.valuesLookup.has(currentIdentifier)) {
+
+        if (!autocompletionData.valuesLookup.has(currentIdentifier))
             return {
                 contents: [],
                 range: new monaco.Range(
@@ -62,7 +67,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
                     word.endColumn
                 ),
             };
-        }
+
         return {
             contents: autocompletionData.valuesLookup
                 .get(currentIdentifier)
