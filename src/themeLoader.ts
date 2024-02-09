@@ -17,11 +17,14 @@ export class ThemeLoader {
         ];
 
         try {
-            let themeList = (await import("../themes/themelist.json")).default;
+            let themeData = (await import(
+                "../themes/themelist.json"
+            )) as Array<string>;
+
+            let themeList = Object.values(themeData);
 
             for (let themeId of themeList) {
-                // @ts-ignore
-                console.log("Import file: ", `../themes/${themeId}.json`);
+                if (typeof themeId != "string") continue;
 
                 let themeData = await import(`../themes/${themeId}.json`);
 
