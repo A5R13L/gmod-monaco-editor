@@ -39,11 +39,7 @@ module.exports = smp.wrap({
         ],
     },
     resolve: {
-        extensions: [".ts", ".js", ".json"],
-        fallback: {
-            fs: false,
-            path: false,
-        }
+        extensions: [".ts", ".js", ".json"]
     },
     plugins: [
         new MonacoWebpackPlugin({
