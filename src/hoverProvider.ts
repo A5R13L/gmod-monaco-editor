@@ -1,6 +1,6 @@
-import * as monaco from "monaco-editor";
-import { autocompletionData } from "./autocompletionData";
-import { GluaItem } from "./glua/GluaItem";
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { autocompletionData } from "./glua/autocompletionData";
+import { GluaItem } from "./glua/luaItem";
 
 export class GLuaHoverProvider implements monaco.languages.HoverProvider {
     provideHover(

@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { GluaItem } from "./GluaItem";
+import { GluaItem } from "./luaItem";
 
 export class GmodInterfaceValue extends GluaItem {
     fullname!: string;

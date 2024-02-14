@@ -1,8 +1,8 @@
-import * as monaco from "monaco-editor";
-import { GmodInterfaceValue } from "./glua/GmodInterfaceValue";
-import { GluaEnum } from "./glua/GluaEnum";
-import { GluaFunc } from "./glua/GluaFunc";
-import { GluaItem } from "./glua/GluaItem";
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { GmodInterfaceValue } from "./gmodInterfaceValue";
+import { GluaEnum } from "./luaEnum";
+import { GluaFunc } from "./luaFunc";
+import { GluaItem } from "./luaItem";
 
 const buildinSnippets = [
     {

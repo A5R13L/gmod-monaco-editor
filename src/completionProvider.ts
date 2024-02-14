@@ -1,5 +1,5 @@
-import * as monaco from "monaco-editor";
-import { autocompletionData } from "./autocompletionData";
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { autocompletionData } from "./glua/autocompletionData";
 
 export class GLuaCompletionProvider
     implements monaco.languages.CompletionItemProvider

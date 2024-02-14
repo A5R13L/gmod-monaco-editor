@@ -1,83 +1,36 @@
-import * as monaco from "monaco-editor";
-import { LuaReport } from "./luacheckCompat";
-import { EditorSession, EditorSessionObject } from "./editorSession";
-import { GmodInterfaceValue } from "./glua/GmodInterfaceValue";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { GmodInterfaceValue } from "./gmodInterfaceValue";
+import { EditorSession } from "./editorSession";
 import { autocompletionData, ResetAutocomplete } from "./autocompletionData";
-import { LoadAutocompletionData, AddCustomData } from "./glua/Gwiki";
+import { LoadAutocompletionData, AddCustomData } from "./wikiScraper";
 
-declare global {
-    namespace globalThis {
-        var gmodinterface: GmodInterface | undefined;
-        var editor: monaco.editor.IStandaloneCodeEditor | undefined;
-    }
-}
-
-interface GmodInterface {
-    OnReady(): void;
-    OnCode(code: string, versionId: number): void;
-    OpenURL(url: string): void;
-    OnThemeChanged(theme: string): void;
-    OnSessionSet(session: object): void;
-    OnAction(actionId: string): void;
-    OnSessions(sessions: object[]): void;
-}
-
-interface ExtendedGmodInterface extends GmodInterface {
-    editor?: monaco.editor.IStandaloneCodeEditor;
-    SetEditor(editor: monaco.editor.IStandaloneCodeEditor): void;
-    SetCode(code: string): void;
-    SetTheme(themeName: string): void;
-    SetLanguage(langId: string): void;
-    GotoLine(line: number): void;
-    SubmitLuaReport(report: LuaReport): void;
-    SaveSession(): void;
-    RenameSession(newName: string, oldName?: string): void;
-    SetSession(name: string): void;
-    CreateSession(sessionObj: object): EditorSession | undefined;
-    CloseSession(sessionName?: string, switchTo?: string): void;
-    LoadSessions(list: object[], newActive?: string): void;
-    SetSessionCode(sessionName: string, code: string): void;
-    AddAutocompleteValue(value: object): void;
-    AddAutocompleteValues(valuesArray: object[]): void;
-    LoadAutocomplete(clData: ClientAutocompleteData): void;
-    AddSnippet(name: string, code: string): void;
-    LoadSnippets(snippets: { name: string; code: string }[]): void;
-    AddAction(action: EditorAction): void;
-    LoadAutocompleteState(state: string): Promise<void>;
-    AddCustomData(elems: any[]): void;
-    ResetAutocompletion(): void;
-    GetSessions(): void;
-}
+import {
+    ClientAutocompleteData,
+    EditorAction,
+    EditorSessionObject,
+    ExtendedGmodInterface,
+    LuaReport,
+    Snippet,
+} from "./defininitions";
 
 let currentSession: EditorSession | undefined;
 export const sessions: Map<string, EditorSession> = new Map();
 
-interface ClientAutocompleteData {
-    values: string; // Array of global non-table concatenated by '|'
-    funcs: string; // Same as above but global functions and object methods
-}
+if (!globalThis.gmodinterface) {
+    globalThis.gmodinterface = {
+        OnReady: console.log,
+        OnCode: console.log,
+        OpenURL: console.log,
+        OnThemeChanged: console.log,
+        OnSessionSet: console.log,
+        OnAction: console.log,
+        OnSessions: console.log,
+    };
 
-interface Snippet {
-    name: string;
-    code: string;
+    console.warn(
+        "gmodInterface was not defined, are we running in a browser context?"
+    );
 }
-
-interface EditorAction {
-    id: string;
-    label: string;
-    keyBindings: string[];
-    contextMenuGroup: string;
-}
-
-// globalThis.gmodinterface = {
-//     OnReady: console.log,
-//     OnCode: console.log,
-//     OpenURL: console.log,
-//     OnThemeChanged: console.log,
-//     OnSessionSet: console.log,
-//     OnAction: console.log,
-//     OnSessions: console.log,
-// };
 
 let maybeGmodInterface: ExtendedGmodInterface | undefined;
 if (globalThis.gmodinterface) {

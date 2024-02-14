@@ -1,6 +1,6 @@
-import { autocompletionData } from "../autocompletionData";
-import { GluaFunc } from "./GluaFunc";
-import { GluaEnum } from "./GluaEnum";
+import { autocompletionData } from "./autocompletionData";
+import { GluaFunc } from "./luaFunc";
+import { GluaEnum } from "./luaEnum";
 import axios from "axios";
 
 function PreprocessGWikiElem(elem: any, parentElem: any) {

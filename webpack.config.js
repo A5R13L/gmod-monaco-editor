@@ -1,14 +1,17 @@
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const path = require("path");
 
-module.exports = {
+const smp = new SpeedMeasurePlugin();
+
+module.exports = smp.wrap({
     mode: "production",
     entry: {
         index: "./src/index.ts",
     },
-    resolve: {
-        extensions: [".ts", ".js"],
+    watchOptions: {
+        ignored: /node_modules/
     },
     output: {
         globalObject: "self",
@@ -19,8 +22,11 @@ module.exports = {
         rules: [
             {
                 test: /\.ts?$/,
-                use: "ts-loader",
+                loader: "babel-loader",
                 exclude: /node_modules/,
+                options: {
+                    presets: ["@babel/env", "@babel/preset-typescript"]
+                }
             },
             {
                 test: /\.css$/,
@@ -28,24 +34,35 @@ module.exports = {
             },
             {
                 test: /\.ttf$/,
-                use: ["file-loader"],
-            },
+                type: "asset/resource",
+            }
         ],
     },
+    resolve: {
+        fallback: {
+            path: require.resolve("path-browserify")
+        },
+        extensions: [".ts", ".js", ".json"]
+    },
     plugins: [
-        new MonacoWebpackPlugin(),
+        new MonacoWebpackPlugin({
+            languages: ["lua"],
+            features: []
+        }),
         new HtmlWebpackPlugin({
+            inject: true,
             template: "views/index.html",
             chunks: ["index"],
         })
     ],
-
-    devtool: "source-map", // source-map in production, eval in development
-
+    devtool: process.env.WEBPACK_SERVE ? "eval" : undefined,
     devServer: {
-        contentBase: path.join(__dirname, "dist"),
+        static: {
+            directory: path.join(__dirname, "dist"),
+        },
+        compress: !process.env.WEBPACK_SERVE,
         port: 8080,
-        compress: true, // true in production, false in development
-        disableHostCheck: true,
+        historyApiFallback: true,
+        allowedHosts: "all",
     },
-};
+});

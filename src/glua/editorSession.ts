@@ -1,12 +1,5 @@
-import * as monaco from "monaco-editor";
-
-export interface EditorSessionObject {
-    name: string;
-    code: string;
-    language: string;
-    viewState?: monaco.editor.ICodeEditorViewState;
-    versionId: number;
-}
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import { EditorSessionObject } from "./defininitions";
 
 export class EditorSession implements EditorSessionObject {
     name: string = "Unnamed";

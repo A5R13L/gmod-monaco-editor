@@ -1,4 +1,4 @@
-import * as monaco from "monaco-editor";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 import { Theme } from "./themeLoader";
 
@@ -12,7 +12,7 @@ function getCurrentTheme(): string {
     return editor!._themeService.getColorTheme().themeName;
 }
 
-export function SetupThemeSelector(themeList: Theme[]): void {
+export function ImplementThemeSelector(themeList: Theme[]): void {
     if (!editor) return;
 
     let quickInputCommand: string | null = editor.addCommand(
@@ -24,8 +24,14 @@ export function SetupThemeSelector(themeList: Theme[]): void {
     );
 
     editor.addAction({
-        id: "editor.command.themes",
-        label: "Set Theme",
+        id: "editor.command.set_theme",
+        label: "Preferences: Color Theme",
+        keybindings: [
+            monaco.KeyMod.chord(
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyT
+            ),
+        ],
         run: (editor) => {
             if (!quickInputCommand) return;
 

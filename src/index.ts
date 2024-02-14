@@ -1,12 +1,13 @@
-import * as monaco from "monaco-editor";
-import * as lua from "./lua";
-import { GLuaFormatter } from "./formatter";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import * as lua from "./glua/luaLanguage";
+import { GLuaFormatter } from "./glua/editorFormatter";
 import { GLuaCompletionProvider } from "./completionProvider";
-import { gmodInterface } from "./gmodInterface";
+import { gmodInterface } from "./glua/gmodInterface";
 import { ThemeLoader } from "./themeLoader";
-import { LoadAutocompletionData } from "./glua/Gwiki";
+import { LoadAutocompletionData } from "./glua/wikiScraper";
 import { GLuaHoverProvider } from "./hoverProvider";
-import { SetupThemeSelector } from "./themeSelector";
+import { ImplementThemeSelector } from "./themeProvider";
+import { ImplementNotifications } from "./notificationProvider";
 
 const themeLoader: ThemeLoader = new ThemeLoader();
 const themePromise: Promise<void> = themeLoader.loadThemes();
@@ -74,10 +75,9 @@ editor.focus();
 window.addEventListener("resize", () => editor.layout());
 
 themePromise.finally(() => {
-    if (gmodInterface) {
-        gmodInterface.SetEditor(editor);
-        gmodInterface.OnReady();
-        LoadAutocompletionData("Client");
-        SetupThemeSelector(themeLoader.getLoadedThemes());
-    } else LoadAutocompletionData("Client");
+    gmodInterface!.SetEditor(editor);
+    gmodInterface!.OnReady();
+    LoadAutocompletionData("Client");
+    ImplementThemeSelector(themeLoader.getLoadedThemes());
+    ImplementNotifications();
 });
