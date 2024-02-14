@@ -13,10 +13,6 @@
     pointer-events: none;
 }
 
-.monaco-notifications:not(:has(.monaco-notifications-header.hidden)) {
-    box-shadow: rgba(0, 0, 0, 0.6) 0px 0px 8px 2px;
-}
-
 .monaco-notifications > .monaco-notifications-header {
     display: flex;
     align-items: center;

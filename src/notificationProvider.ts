@@ -154,6 +154,8 @@ export class NotificationProvider {
     }
 
     Show() {
+        this.container.style.boxShadow = "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px;";
+
         this.container.classList.add("monaco-editor");
         this.headerActionBar.Render();
         this.header.classList.remove("hidden");
@@ -167,6 +169,8 @@ export class NotificationProvider {
     }
 
     Hide() {
+        this.container.style.boxShadow = "";
+
         this.container.classList.remove("monaco-editor");
         this.header.classList.add("hidden");
 
