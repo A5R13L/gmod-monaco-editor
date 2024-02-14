@@ -8,6 +8,7 @@ import { LoadAutocompletionData } from "./glua/wikiScraper";
 import { GLuaHoverProvider } from "./hoverProvider";
 import { ImplementThemeSelector } from "./themeProvider";
 import { ImplementNotifications } from "./notificationProvider";
+import { ImplementExecution } from "./glua/executionProvider";
 
 const themeLoader: ThemeLoader = new ThemeLoader();
 const themePromise: Promise<void> = themeLoader.loadThemes();
@@ -23,12 +24,12 @@ monaco.languages.setLanguageConfiguration("glua", lua.conf);
 
 monaco.languages.registerDocumentFormattingEditProvider(
     "glua",
-    new GLuaFormatter()
+    new GLuaFormatter(),
 );
 
 monaco.languages.registerCompletionItemProvider(
     "glua",
-    new GLuaCompletionProvider()
+    new GLuaCompletionProvider(),
 );
 
 monaco.languages.registerHoverProvider("glua", new GLuaHoverProvider());
@@ -68,7 +69,7 @@ const editor = monaco.editor.create(
             onWillSaveState() {},
             onDidChangeStorage() {},
         },
-    }
+    },
 );
 
 editor.focus();
@@ -80,4 +81,5 @@ themePromise.finally(() => {
     LoadAutocompletionData("Client");
     ImplementThemeSelector(themeLoader.getLoadedThemes());
     ImplementNotifications();
+    ImplementExecution();
 });

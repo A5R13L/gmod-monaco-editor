@@ -11,12 +11,14 @@ export class Notification {
     type: monaco.MarkerSeverity;
     label: string;
     container: HTMLElement;
+    actionBar: ActionBar;
     hasSeen: boolean;
 
     constructor() {
         this.type = monaco.MarkerSeverity.Info;
         this.label = "";
         this.container = document.createElement("div");
+        this.actionBar = new ActionBar();
         this.hasSeen = false;
 
         this.container.className = "monaco-editor monaco-notification hidden";
@@ -26,21 +28,14 @@ export class Notification {
         let icon = document.createElement("div");
         let labelContainer = document.createElement("div");
         let label = document.createElement("span");
-        let dismissContainer = document.createElement("div");
-        let dismissButton = document.createElement("a");
-
-        dismissContainer.className = "notification-dismiss-container";
-
-        dismissButton.className =
-            "notification-dismiss codicon codicon-chrome-close";
 
         labelContainer.className = "notification-text";
 
         let notification = this;
 
-        dismissButton.onclick = function () {
+        this.actionBar.AddAction("chrome-close", function () {
             notificationProvider?.RemoveNotification(notification);
-        };
+        });
 
         icon.className = `notification-icon codicon codicon-${monaco.MarkerSeverity[
             this.type
@@ -48,11 +43,10 @@ export class Notification {
 
         label.innerHTML = this.label;
 
-        dismissContainer.appendChild(dismissButton);
         labelContainer.appendChild(label);
         this.container.appendChild(icon);
         this.container.appendChild(labelContainer);
-        this.container.appendChild(dismissContainer);
+        this.container.appendChild(this.actionBar.bar);
         listContainer.appendChild(this.container);
 
         if (notificationListDoNotDisturb?.get())
@@ -61,6 +55,7 @@ export class Notification {
 
     Show() {
         this.container.classList.remove("hidden");
+        this.actionBar.Render();
 
         if (!notificationProvider?.header.classList.contains("hidden"))
             this.container.classList.add("no-border");
@@ -194,7 +189,7 @@ export class NotificationProvider {
                 _notification.label == notification.label &&
                 _notification.type == notification.type
             )
-                this.RemoveNotification(notification);
+                this.RemoveNotification(notification, true);
 
         if (this.header.classList.contains("hidden"))
             for (let _notification of this.items) _notification.Hide();
@@ -222,7 +217,7 @@ export class NotificationProvider {
         return this.AddNotification(notification);
     }
 
-    RemoveNotification(notification: Notification) {
+    RemoveNotification(notification: Notification, ignoreClose?: boolean) {
         for (let index in this.items) {
             let data = this.items[index];
 
@@ -238,13 +233,13 @@ export class NotificationProvider {
 
         this.headerTitle.textContent = `Notifications (${this.items.length})`;
 
-        this.headerActionBar.Render();
-
         if (this.items.length == 0) {
             this.headerTitle.textContent = "No New Notifications";
 
-            this.Hide();
+            if (!ignoreClose) this.Hide();
         }
+
+        this.headerActionBar.Render();
     }
 
     Layout(width: number, height: number) {

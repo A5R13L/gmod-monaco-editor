@@ -11,7 +11,7 @@ import {
     ExtendedGmodInterface,
     LuaReport,
     Snippet,
-} from "./defininitions";
+} from "./definitions";
 
 let currentSession: EditorSession | undefined;
 export const sessions: Map<string, EditorSession> = new Map();
@@ -25,6 +25,7 @@ if (!globalThis.gmodinterface) {
         OnSessionSet: console.log,
         OnAction: console.log,
         OnSessions: console.log,
+        OnExecute: console.log,
     };
 
     console.warn(

@@ -38,12 +38,14 @@
     flex: 1;
 }
 
-.monaco-notification:not(:hover) > .notification-dismiss-container {
+.monaco-notification:not(:hover) > .monaco-action-bar {
     display: none;
 }
 
 .monaco-notification:hover > .notification-dismiss-container {
     cursor: pointer;
+    background: rgba(90, 93, 94, 0.31);
+    border-radius: 4px;
 }
 
 .monaco-notification > .notification-dismiss-container {
@@ -93,7 +95,7 @@
     margin-right: 4px;
 }
 
-.monaco-action-bar:not(.vertical) .action-label:not(.disabled):hover {
+.action-label:not(.disabled):hover {
     background: rgba(90, 93, 94, 0.31);
 }
 

@@ -1,5 +1,5 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { EditorSessionObject } from "./defininitions";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { EditorSessionObject } from "./definitions";
 
 export class EditorSession implements EditorSessionObject {
     name: string = "Unnamed";
@@ -8,7 +8,7 @@ export class EditorSession implements EditorSessionObject {
 
     model: monaco.editor.ITextModel = monaco.editor.createModel(
         this.code,
-        this.language
+        this.language,
     );
 
     viewState?: monaco.editor.ICodeEditorViewState;

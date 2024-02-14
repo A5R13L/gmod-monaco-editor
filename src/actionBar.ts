@@ -1,7 +1,7 @@
 import {
     ActionPressedFunction,
     ActionRenderFunction,
-} from "./glua/defininitions";
+} from "./glua/definitions";
 
 export class ActionItem {
     container: HTMLElement;
@@ -72,7 +72,7 @@ export class ActionBar {
     AddAction(
         icon: string,
         actionPressedFunction: ActionPressedFunction,
-        disabled?: boolean
+        disabled?: boolean,
     ) {
         let actionItem = new ActionItem();
 

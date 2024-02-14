@@ -38,6 +38,7 @@ export interface GmodInterface {
     OnSessionSet(session: object): void;
     OnAction(actionId: string): void;
     OnSessions(sessions: object[]): void;
+    OnExecute(realm: string, code: string): void;
 }
 
 export interface ExtendedGmodInterface extends GmodInterface {
@@ -117,6 +118,7 @@ export interface Notification {
     type: monaco.MarkerSeverity;
     label: string;
     container: HTMLElement;
+    actionBar: ActionBar;
     hasSeen: boolean;
 
     Setup(listContainer: HTMLElement): void;
@@ -138,6 +140,6 @@ export interface NotificationProvider {
     Clear(): void;
     AddNotification(notification: Notification): void;
     AddNotificationFromString(type: string, label: string): void;
-    RemoveNotification(notification: Notification): void;
+    RemoveNotification(notification: Notification, ignoreClose?: boolean): void;
     Layout(width: number, height: number): void;
 }
