@@ -39,9 +39,6 @@ module.exports = smp.wrap({
         ],
     },
     resolve: {
-        fallback: {
-            path: require.resolve("path-browserify")
-        },
         extensions: [".ts", ".js", ".json"]
     },
     plugins: [

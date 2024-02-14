@@ -28,7 +28,7 @@ if (!globalThis.gmodinterface) {
     };
 
     console.warn(
-        "gmodInterface was not defined, are we running in a browser context?"
+        "gmodInterface was not defined, are we running in a browser context?",
     );
 }
 
@@ -45,13 +45,13 @@ if (globalThis.gmodinterface) {
             editor.onDidChangeModelContent(() => {
                 this.OnCode(
                     editor.getValue(),
-                    editor.getModel()!.getAlternativeVersionId()
+                    editor.getModel()!.getAlternativeVersionId(),
                 );
             });
 
             // @ts-ignore
             editor.getContribution("editor.linkDetector").openerService.open = (
-                url: string
+                url: string,
             ) => {
                 this.OpenURL(url);
             };
@@ -86,7 +86,7 @@ if (globalThis.gmodinterface) {
 
             this.editor!.revealPositionInCenterIfOutsideViewport(
                 position,
-                monaco.editor.ScrollType.Smooth
+                monaco.editor.ScrollType.Smooth,
             );
         },
 
@@ -103,13 +103,13 @@ if (globalThis.gmodinterface) {
                             ? monaco.MarkerSeverity.Error
                             : monaco.MarkerSeverity.Warning,
                     };
-                }
+                },
             );
 
             monaco.editor.setModelMarkers(
                 this.editor!.getModel()!,
                 "luacheck",
-                markers
+                markers,
             );
         },
 
@@ -164,18 +164,18 @@ if (globalThis.gmodinterface) {
             monaco.editor.setModelMarkers(
                 this.editor!.getModel()!,
                 "luacheck",
-                []
+                [],
             );
         },
 
         CreateSession(
-            sessionObj: EditorSessionObject
+            sessionObj: EditorSessionObject,
         ): EditorSession | undefined {
             const session = EditorSession.fromObject(sessionObj);
 
             if (sessions.has(session.name)) {
                 console.error(
-                    `Cant add session named ${session.name}, name already taken`
+                    `Cant add session named ${session.name}, name already taken`,
                 );
 
                 return;
@@ -190,7 +190,7 @@ if (globalThis.gmodinterface) {
         CloseSession(sessionName?: string, switchTo?: string): void {
             if (sessionName && !sessions.has(sessionName)) {
                 console.error(
-                    `Cant close session named ${sessionName}, it does not exist`
+                    `Cant close session named ${sessionName}, it does not exist`,
                 );
 
                 return;
@@ -226,7 +226,7 @@ if (globalThis.gmodinterface) {
         SetSessionCode(sessionName: string, code: string): void {
             if (!sessions.has(sessionName))
                 console.error(
-                    `Cant set code for session session named ${sessionName}, it does not exist`
+                    `Cant set code for session session named ${sessionName}, it does not exist`,
                 );
 
             sessions.get(sessionName)?.model.setValue(code);
@@ -234,14 +234,14 @@ if (globalThis.gmodinterface) {
 
         AddAutocompleteValue(value: object): void {
             autocompletionData.AddNewInterfaceValue(
-                new GmodInterfaceValue(value)
+                new GmodInterfaceValue(value),
             );
         },
 
         AddAutocompleteValues(valuesArray: object[]): void {
             valuesArray.forEach((val: any) => {
                 autocompletionData.AddNewInterfaceValue(
-                    new GmodInterfaceValue(val)
+                    new GmodInterfaceValue(val),
                 );
             });
         },
@@ -278,7 +278,7 @@ if (globalThis.gmodinterface) {
                         new GmodInterfaceValue({
                             name,
                             fullname: value,
-                        })
+                        }),
                     );
             });
 
@@ -328,7 +328,7 @@ if (globalThis.gmodinterface) {
                             fullname: func,
                             classFunction,
                             type,
-                        })
+                        }),
                     );
                 } else if (!autocompletionData.valuesLookup.has(func))
                     autocompletionData.AddNewInterfaceValue(
@@ -338,7 +338,7 @@ if (globalThis.gmodinterface) {
                             fullname: func,
                             classFunction,
                             type,
-                        })
+                        }),
                     );
             });
 
