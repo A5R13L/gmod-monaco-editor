@@ -194,7 +194,7 @@ export class NotificationProvider {
                 _notification.label == notification.label &&
                 _notification.type == notification.type
             )
-                return;
+                this.RemoveNotification(notification);
 
         if (this.header.classList.contains("hidden"))
             for (let _notification of this.items) _notification.Hide();
@@ -319,23 +319,6 @@ export async function ImplementNotifications() {
         precondition: "notifications.has_a_toast",
         run: function () {
             notificationProvider?.listContainer.lastChild;
-        },
-    });
-
-    editor?.addAction({
-        id: "editor.command.notifications_test",
-        label: "Notifications: Test",
-        run: function () {
-            let notification = new Notification();
-
-            notification.type = monaco.MarkerSeverity.Error;
-
-            notification.label =
-                "This is a notification: " +
-                notificationProvider?.items.length +
-                1;
-
-            notificationProvider?.AddNotification(notification);
         },
     });
 }
