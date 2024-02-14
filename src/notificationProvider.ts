@@ -93,7 +93,6 @@ export class NotificationProvider {
         this.headerActionBar = new ActionBar();
         this.listContainer = document.createElement("div");
 
-        let notificationOffsetHelper = document.createElement("div");
         let notificationListContainer = document.createElement("div");
 
         let clearAllAction = this.headerActionBar.AddAction(
@@ -140,10 +139,6 @@ export class NotificationProvider {
         notificationListContainer.className = "monaco-notifications-container";
         this.listContainer.className = "monaco-list mouse-support";
 
-        notificationOffsetHelper.className =
-            "monaco-notifications-offset-helper";
-
-        notificationListContainer.appendChild(notificationOffsetHelper);
         notificationListContainer.appendChild(this.listContainer);
         this.headerToolbar.appendChild(this.headerActionBar.bar);
         this.header.appendChild(this.headerTitle);
