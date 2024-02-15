@@ -10,7 +10,9 @@ let notificationListDoNotDisturb:
 export class Notification {
     type: monaco.MarkerSeverity;
     label: string;
+    expires?: number;
     container: HTMLElement;
+    durationBar: HTMLElement;
     actionBar: ActionBar;
     hasSeen: boolean;
 
@@ -18,10 +20,12 @@ export class Notification {
         this.type = monaco.MarkerSeverity.Info;
         this.label = "";
         this.container = document.createElement("div");
+        this.durationBar = document.createElement("div");
         this.actionBar = new ActionBar();
         this.hasSeen = false;
 
         this.container.className = "monaco-editor monaco-notification hidden";
+        this.durationBar.className = "notification-duration hidden";
     }
 
     Setup(listContainer: HTMLElement) {
@@ -37,9 +41,12 @@ export class Notification {
             notificationProvider?.RemoveNotification(notification);
         });
 
-        icon.className = `notification-icon codicon codicon-${monaco.MarkerSeverity[
-            this.type
-        ].toLowerCase()}`;
+        let name = monaco.MarkerSeverity[this.type].toLowerCase();
+        let color = `codicon-color-${name}`;
+
+        icon.className = `notification-icon codicon codicon-${name == "hint" ? "question" : name} ${color}`;
+
+        this.durationBar.classList.add(color);
 
         label.innerHTML = this.label;
 
@@ -47,10 +54,35 @@ export class Notification {
         this.container.appendChild(icon);
         this.container.appendChild(labelContainer);
         this.container.appendChild(this.actionBar.bar);
+        this.container.appendChild(this.durationBar);
         listContainer.appendChild(this.container);
 
         if (notificationListDoNotDisturb?.get())
             this.container.classList.add("fade-in");
+    }
+
+    Animate() {
+        if (typeof this.expires == "undefined") return;
+
+        this.durationBar.classList.remove("hidden");
+
+        let _this = this;
+
+        setTimeout(function () {
+            let animation = _this.durationBar.animate(
+                [{ width: "101%" }, { width: "0%" }],
+                {
+                    duration: _this.expires,
+                    iterations: 1,
+                },
+            );
+
+            animation.onfinish = function () {
+                _this.durationBar.classList.add("hidden");
+
+                notificationProvider?.RemoveNotification(_this);
+            };
+        }, 0);
     }
 
     Show() {
@@ -204,6 +236,7 @@ export class NotificationProvider {
         this.items.push(notification);
         notificationListHasAToast?.set(true);
         notification.Setup(this.listContainer);
+        notification.Animate();
         this.headerActionBar.Render();
 
         this.headerTitle.textContent = `Notifications (${this.items.length})`;
@@ -212,12 +245,13 @@ export class NotificationProvider {
         else notification.Show();
     }
 
-    AddNotificationFromString(type: string, label: string) {
+    AddNotificationFromString(type: string, label: string, expires?: number) {
         let notification = new Notification();
 
         // @ts-ignore
         notification.type = monaco.MarkerSeverity[type];
         notification.label = label;
+        notification.expires = expires;
 
         if (typeof notification.type == "undefined") return;
 
@@ -232,7 +266,11 @@ export class NotificationProvider {
                 data.label == notification.label &&
                 data.type == notification.type
             ) {
+                for (let animation of data.durationBar.getAnimations())
+                    animation.cancel();
+
                 data.container.remove();
+
                 // @ts-ignore
                 this.items.splice(index, 1);
             }

@@ -7,10 +7,9 @@
     border-radius: 4px;
 }
 
-.monaco-notifications-header.hidden,
-.monaco-notification.hidden {
+.hidden {
     display: none !important;
-    pointer-events: none;
+    pointer-events: none !important;
 }
 
 .monaco-notifications > .monaco-notifications-header {
@@ -115,20 +114,44 @@
     background-repeat: no-repeat;
 }
 
-.monaco-notification > .notification-icon.codicon-error {
+.monaco-notification > .notification-duration {
+    height: 3px;
+    position: absolute;
+    bottom: 0px;
+    left: -1px;
+    width: 101%;
+}
+
+.codicon-color-error {
     color: #f14c4c;
 }
 
-.monaco-notification > .notification-icon.codicon-warning {
+.codicon-color-warning {
     color: #cca700;
 }
 
-.monaco-notification > .notification-icon.codicon-info {
+.codicon-color-info {
     color: #3794ff;
 }
 
-.monaco-notification > .notification-icon.codicon-hint {
-    color: rgba(238, 238, 238, 0.7);
+.notification-duration.codicon-color-hint {
+    background: rgba(238, 238, 238, 0.7);
+}
+
+.notification-duration.codicon-color-error {
+    background: #f14c4c;
+}
+
+.notification-duration.codicon-color-warning {
+    background: #cca700;
+}
+
+.notification-duration.codicon-color-info {
+    background: #3794ff;
+}
+
+.notification-duration.codicon-color-hint {
+    background: rgba(238, 238, 238, 0.7);
 }
 
 .monaco-notification > .notification-text {

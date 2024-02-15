@@ -117,11 +117,14 @@ export interface ActionBar {
 export interface Notification {
     type: monaco.MarkerSeverity;
     label: string;
+    expires?: number;
     container: HTMLElement;
+    durationBar: HTMLElement;
     actionBar: ActionBar;
     hasSeen: boolean;
 
     Setup(listContainer: HTMLElement): void;
+    Animate(): void;
     Show(): void;
     Hide(): void;
 }
@@ -139,7 +142,11 @@ export interface NotificationProvider {
     Hide(): void;
     Clear(): void;
     AddNotification(notification: Notification): void;
-    AddNotificationFromString(type: string, label: string): void;
+    AddNotificationFromString(
+        type: string,
+        label: string,
+        expires?: number,
+    ): void;
     RemoveNotification(notification: Notification, ignoreClose?: boolean): void;
     Layout(width: number, height: number): void;
 }
