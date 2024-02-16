@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { GmodInterfaceValue } from "./gmodInterfaceValue";
 import { GluaEnum } from "./luaEnum";
 import { GluaFunc } from "./luaFunc";
@@ -31,6 +31,7 @@ const buildinSnippets = [
     },
 ];
 const buildinConstants = ["SERVER", "CLIENT", "_G", "_VERSION", "VERSION"];
+
 const keywords = [
     "and",
     "break",
@@ -184,7 +185,7 @@ class AutocompletionData {
                 };
 
                 this.globalCache.push(item);
-            }
+            },
         );
     }
 
@@ -254,13 +255,13 @@ class AutocompletionData {
                 };
 
                 this.methodsCache.push(item);
-            }
+            },
         );
     }
 
     updateCacheRange(
         cache: monaco.languages.CompletionItem[],
-        newRange: monaco.IRange
+        newRange: monaco.IRange,
     ) {
         cache.forEach((val) => {
             val.range = newRange;
@@ -286,7 +287,7 @@ class AutocompletionData {
     }
     hookAutocomplete(
         range: monaco.IRange,
-        addQuotes: boolean
+        addQuotes: boolean,
     ): monaco.languages.CompletionList {
         const hookSuggestions: monaco.languages.CompletionItem[] = [];
 

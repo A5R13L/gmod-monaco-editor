@@ -37,7 +37,7 @@ export class Notification {
 
         let notification = this;
 
-        this.actionBar.AddAction("chrome-close", function () {
+        this.actionBar.AddAction("chrome-close", () => {
             notificationProvider?.RemoveNotification(notification);
         });
 
@@ -68,7 +68,7 @@ export class Notification {
 
         let _this = this;
 
-        setTimeout(function () {
+        setTimeout(() => {
             let animation = _this.durationBar.animate(
                 [{ width: "101%" }, { width: "0%" }],
                 {
@@ -77,7 +77,7 @@ export class Notification {
                 },
             );
 
-            animation.onfinish = function () {
+            animation.onfinish = () => {
                 _this.durationBar.classList.add("hidden");
 
                 notificationProvider?.RemoveNotification(_this);
@@ -94,7 +94,7 @@ export class Notification {
 
         let container = this.container;
 
-        setTimeout(function () {
+        setTimeout(() => {
             container.classList.add("fade-in");
         }, 0);
     }
@@ -129,36 +129,33 @@ export class NotificationProvider {
 
         let clearAllAction = this.headerActionBar.AddAction(
             "clear-all",
-            function () {
+            () => {
                 notificationProvider?.Clear();
             },
             true,
         );
 
-        clearAllAction.OnRender(function () {
+        clearAllAction.OnRender(() => {
             clearAllAction.SetDisabled(
                 notificationProvider?.items.length === 0,
             );
         });
 
-        let doNotDisturbAction = this.headerActionBar.AddAction(
-            "bell",
-            function () {
-                notificationListDoNotDisturb?.set(
-                    !notificationListDoNotDisturb?.get(),
-                );
+        let doNotDisturbAction = this.headerActionBar.AddAction("bell", () => {
+            notificationListDoNotDisturb?.set(
+                !notificationListDoNotDisturb?.get(),
+            );
 
-                notificationProvider?.headerActionBar.Render();
-            },
-        );
+            notificationProvider?.headerActionBar.Render();
+        });
 
-        doNotDisturbAction.OnRender(function () {
+        doNotDisturbAction.OnRender(() => {
             if (notificationListDoNotDisturb?.get())
                 doNotDisturbAction.SetIcon("bell-slash");
             else doNotDisturbAction.SetIcon("bell");
         });
 
-        this.headerActionBar.AddAction("chevron-down", function () {
+        this.headerActionBar.AddAction("chevron-down", () => {
             notificationProvider?.Hide();
         });
 
@@ -180,7 +177,7 @@ export class NotificationProvider {
         document.getElementById("container")!.appendChild(this.container);
     }
 
-    Show() {
+    Show(): void {
         this.container.classList.add("monaco-editor");
         this.headerActionBar.Render();
         this.header.classList.remove("hidden");
@@ -194,12 +191,12 @@ export class NotificationProvider {
 
         let container = this.container;
 
-        setTimeout(function () {
+        setTimeout(() => {
             container.style.boxShadow = "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px";
         }, 0);
     }
 
-    Hide() {
+    Hide(): void {
         this.container.classList.remove("monaco-editor");
         this.header.classList.add("hidden");
 
@@ -207,12 +204,12 @@ export class NotificationProvider {
 
         let container = this.container;
 
-        setTimeout(function () {
+        setTimeout(() => {
             container.style.boxShadow = "";
         }, 0);
     }
 
-    Clear() {
+    Clear(): void {
         notificationListHasAToast?.set(false);
 
         this.items.length = 0;
@@ -222,7 +219,7 @@ export class NotificationProvider {
         notificationProvider?.Hide();
     }
 
-    AddNotification(notification: Notification) {
+    AddNotification(notification: Notification): void {
         for (let _notification of this.items)
             if (
                 _notification.label == notification.label &&
@@ -245,7 +242,11 @@ export class NotificationProvider {
         else notification.Show();
     }
 
-    AddNotificationFromString(type: string, label: string, expires?: number) {
+    AddNotificationFromString(
+        type: string,
+        label: string,
+        expires?: number,
+    ): void {
         let notification = new Notification();
 
         // @ts-ignore
@@ -258,7 +259,10 @@ export class NotificationProvider {
         return this.AddNotification(notification);
     }
 
-    RemoveNotification(notification: Notification, ignoreClose?: boolean) {
+    RemoveNotification(
+        notification: Notification,
+        ignoreClose?: boolean,
+    ): void {
         for (let index in this.items) {
             let data = this.items[index];
 
@@ -295,7 +299,7 @@ export class NotificationProvider {
     }
 }
 
-export async function ImplementNotifications() {
+export async function ImplementNotifications(): Promise<void> {
     notificationListHasAToast = editor?.createContextKey(
         "notifications.has_a_toast",
         false,
@@ -314,7 +318,7 @@ export async function ImplementNotifications() {
         }, 0);
     });
 
-    editor?.addCommand(monaco.KeyCode.Escape, function () {
+    editor?.addCommand(monaco.KeyCode.Escape, () => {
         notificationProvider?.Hide();
     });
 
@@ -327,7 +331,7 @@ export async function ImplementNotifications() {
                 monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyN,
             ),
         ],
-        run: function () {
+        run: () => {
             notificationProvider?.Show();
         },
     });
@@ -335,7 +339,7 @@ export async function ImplementNotifications() {
     editor?.addAction({
         id: "editor.command.notifications_clear",
         label: "Notifications: Clear",
-        run: function () {
+        run: () => {
             notificationProvider?.Clear();
         },
         precondition: "notifications.has_a_toast",
@@ -344,21 +348,12 @@ export async function ImplementNotifications() {
     editor?.addAction({
         id: "editor.command.notifications_toggle_do_not_disturb_mode",
         label: "Notifications: Toggle Do Not Disturb Mode",
-        run: function () {
+        run: () => {
             notificationListDoNotDisturb?.set(
                 !notificationListDoNotDisturb?.get(),
             );
 
             notificationProvider?.headerActionBar.Render();
-        },
-    });
-
-    editor?.addAction({
-        id: "editor.command.notifications_focus_notification_toast",
-        label: "Notifications: Focus Notification Toast",
-        precondition: "notifications.has_a_toast",
-        run: function () {
-            notificationProvider?.listContainer.lastChild;
         },
     });
 }

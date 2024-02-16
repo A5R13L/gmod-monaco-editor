@@ -34,9 +34,9 @@ function PreprocessGWikiElem(elem: any, parentElem: any) {
     } else elem.example = [];
 }
 
-function addEnum(jsonOBJ: any) {
-    if (Array.isArray(jsonOBJ.enum)) {
-        jsonOBJ.enum.forEach((element: any) => {
+function addEnum(elem: any) {
+    if (Array.isArray(elem.enum)) {
+        elem.enum.forEach((element: any) => {
             addEnum({ items: element });
         });
         return;
@@ -44,8 +44,8 @@ function addEnum(jsonOBJ: any) {
 
     let enums;
 
-    if (Array.isArray(jsonOBJ)) enums = jsonOBJ;
-    else enums = jsonOBJ.items.item;
+    if (Array.isArray(elem)) enums = elem;
+    else enums = elem.items.item;
 
     enums.forEach((element: { items: any }) => {
         if (element.items) {
@@ -58,7 +58,7 @@ function addEnum(jsonOBJ: any) {
 
         if (autocompletionData.valuesLookup.has(enumObj.key)) return;
 
-        enumObj.tableDesc = jsonOBJ.description;
+        enumObj.tableDesc = elem.description;
         autocompletionData.valuesLookup.set(enumObj.key, enumObj);
         autocompletionData.enums.push(enumObj);
     });
@@ -70,7 +70,7 @@ const request = axios.create();
 export async function FetchGwiki() {
     gwikiData = (
         await request(
-            "https://metastruct.github.io/gmod-wiki-scraper/gwiki.json"
+            "https://metastruct.github.io/gmod-wiki-scraper/gwiki.json",
         )
     ).data;
 }

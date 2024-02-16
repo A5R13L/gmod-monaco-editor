@@ -3,6 +3,7 @@ import { GmodInterfaceValue } from "./gmodInterfaceValue";
 import { EditorSession } from "./editorSession";
 import { autocompletionData, ResetAutocomplete } from "./autocompletionData";
 import { LoadAutocompletionData, AddCustomData } from "./wikiScraper";
+import axios from "axios";
 
 import {
     ClientAutocompleteData,
@@ -15,6 +16,7 @@ import {
 
 let currentSession: EditorSession | undefined;
 export const sessions: Map<string, EditorSession> = new Map();
+const request = axios.create();
 
 if (!globalThis.gmodinterface) {
     globalThis.gmodinterface = {
@@ -394,7 +396,7 @@ if (globalThis.gmodinterface) {
         },
 
         LoadAutocompleteState(state: string): Promise<void> {
-            return new Promise<void>(function (resolve, _) {
+            return new Promise<void>((resolve) => {
                 LoadAutocompletionData(state).then(() => {
                     autocompletionData.ClearAutocompleteCache();
                     resolve();
@@ -402,8 +404,10 @@ if (globalThis.gmodinterface) {
             });
         },
 
-        AddCustomData(elems: any[]): void {
-            AddCustomData(elems);
+        async ExtendAutocompleteWithURL(url: string): Promise<void> {
+            try {
+                AddCustomData((await request(url)).data);
+            } catch (Error) {}
         },
 
         ResetAutocompletion(): void {

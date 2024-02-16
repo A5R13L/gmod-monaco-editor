@@ -11,7 +11,7 @@ export class ActionItem {
     constructor() {
         this.container = document.createElement("li");
         this.button = document.createElement("a");
-        this.render = function () {};
+        this.render = () => {};
 
         this.container.className = "action-item";
         this.button.className = "action-label codicon";
@@ -19,7 +19,7 @@ export class ActionItem {
         this.container.appendChild(this.button);
     }
 
-    SetIcon(icon: string) {
+    SetIcon(icon: string): void {
         this.button.classList.forEach((classElement) => {
             if (classElement.indexOf("codicon-") !== -1)
                 this.button.classList.remove(classElement);
@@ -30,7 +30,7 @@ export class ActionItem {
         this.button.classList.add(`codicon-${icon}`);
     }
 
-    SetDisabled(disabled: boolean | undefined) {
+    SetDisabled(disabled: boolean | undefined): void {
         if (disabled) {
             this.container.classList.add("disabled");
             this.button.classList.add("disabled");
@@ -40,15 +40,15 @@ export class ActionItem {
         }
     }
 
-    OnClick(actionPressedFunction: ActionPressedFunction) {
+    OnClick(actionPressedFunction: ActionPressedFunction): void {
         this.button.onclick = actionPressedFunction;
     }
 
-    OnRender(actionRenderFunction: ActionRenderFunction) {
+    OnRender(actionRenderFunction: ActionRenderFunction): void {
         this.render = actionRenderFunction;
     }
 
-    Render() {
+    Render(): void {
         this.render();
     }
 }
@@ -73,7 +73,7 @@ export class ActionBar {
         icon: string,
         actionPressedFunction: ActionPressedFunction,
         disabled?: boolean,
-    ) {
+    ): ActionItem {
         let actionItem = new ActionItem();
 
         actionItem.SetIcon(icon);
@@ -85,7 +85,7 @@ export class ActionBar {
         return actionItem;
     }
 
-    Render() {
+    Render(): void {
         for (let actionItem of this.items) actionItem.Render();
     }
 }

@@ -20,7 +20,7 @@ export function ImplementThemeSelector(themeList: Theme[]): void {
         (accessor, func) => {
             let quickInputService = accessor.get(IQuickInputService);
             func(quickInputService);
-        }
+        },
     );
 
     editor.addAction({
@@ -29,7 +29,7 @@ export function ImplementThemeSelector(themeList: Theme[]): void {
         keybindings: [
             monaco.KeyMod.chord(
                 monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
-                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyT
+                monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyT,
             ),
         ],
         run: (editor) => {

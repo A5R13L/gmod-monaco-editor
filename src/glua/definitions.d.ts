@@ -63,7 +63,7 @@ export interface ExtendedGmodInterface extends GmodInterface {
     LoadSnippets(snippets: { name: string; code: string }[]): void;
     AddAction(action: EditorAction): void;
     LoadAutocompleteState(state: string): Promise<void>;
-    AddCustomData(elems: any[]): void;
+    ExtendAutocompleteWithURL(url: string): Promise<void>;
     ResetAutocompletion(): void;
     GetSessions(): void;
 }

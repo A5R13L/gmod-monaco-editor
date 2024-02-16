@@ -10,7 +10,7 @@ export function ImplementExecution() {
                 monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC,
             ),
         ],
-        run: function () {
+        run: () => {
             gmodinterface?.OnExecute("client", editor!.getValue());
         },
     });
@@ -24,7 +24,7 @@ export function ImplementExecution() {
                 monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM,
             ),
         ],
-        run: function () {
+        run: () => {
             gmodinterface?.OnExecute("menu", editor!.getValue());
         },
     });
