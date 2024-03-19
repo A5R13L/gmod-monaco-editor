@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { autocompletionData } from "./glua/autocompletionData";
 
 export class GLuaCompletionProvider
@@ -10,7 +10,7 @@ export class GLuaCompletionProvider
         model: monaco.editor.ITextModel,
         position: monaco.Position,
         context: monaco.languages.CompletionContext,
-        token: monaco.CancellationToken
+        token: monaco.CancellationToken,
     ): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
         const lineUntil = model
             .getLineContent(position.lineNumber)
@@ -57,7 +57,7 @@ export class GLuaCompletionProvider
         else if (
             lastChar === "." &&
             autocompletionData.modules.indexOf(
-                currentIdentifier.split(".")[0]
+                currentIdentifier.split(".")[0],
             ) !== -1
         ) {
             insertRange.startColumn = firstIdentifierWord.startColumn;
@@ -70,7 +70,7 @@ export class GLuaCompletionProvider
         ) {
             return autocompletionData.hookAutocomplete(
                 insertRange,
-                lastChar === "("
+                lastChar === "(",
             );
         } else if (prevWord.word === "local") {
             return {

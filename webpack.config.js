@@ -57,6 +57,9 @@ module.exports = smp.wrap({
         static: {
             directory: path.join(__dirname, "dist"),
         },
+        client: {
+            overlay: false
+        },
         compress: !process.env.WEBPACK_SERVE,
         port: 8080,
         historyApiFallback: true,

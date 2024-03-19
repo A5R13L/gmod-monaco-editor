@@ -9,6 +9,7 @@ import { GLuaHoverProvider } from "./hoverProvider";
 import { ImplementThemeSelector } from "./themeProvider";
 import { ImplementNotifications } from "./notificationProvider";
 import { ImplementExecution } from "./glua/executionProvider";
+import "./editor.css";
 
 const themeLoader: ThemeLoader = new ThemeLoader();
 const themePromise: Promise<void> = themeLoader.loadThemes();
