@@ -150,3 +150,28 @@ export interface NotificationProvider {
     RemoveNotification(notification: Notification, ignoreClose?: boolean): void;
     Layout(width: number, height: number): void;
 }
+
+export interface SuggestController {
+    triggerSuggest(): void;
+    acceptSelectedSuggestion(): void;
+    cancelSuggestWidget(): void;
+    selectNextSuggestion(): void;
+    selectNextPageSuggestion(): void;
+    selectPrevSuggestion(): void;
+    selectPrevPageSuggestion(): void;
+    toggleSuggestionDetails(): void;
+    toggleSuggestionFocus(): void;
+
+    model: {
+        state: "idle" | "manual" | "auto" | "loading" | "frozen";
+        widgetVisible: boolean;
+        selectedSuggestion?: any;
+        getSelectedSuggestion(): any;
+    };
+
+    // Only present if using `editor.getContribution('editor.contrib.suggestController')`
+    widget: {
+        showTriggered: boolean;
+        visible: boolean;
+    };
+}

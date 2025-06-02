@@ -1,14 +1,16 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import * as lua from "./glua/luaLanguage";
-import { GLuaFormatter } from "./glua/editorFormatter";
 import { GLuaCompletionProvider } from "./completionProvider";
+import { GLuaFormatter } from "./glua/editorFormatter";
+import { ImplementExecution } from "./glua/executionProvider";
 import { gmodInterface } from "./glua/gmodInterface";
-import { ThemeLoader } from "./themeLoader";
+import * as lua from "./glua/luaLanguage";
 import { LoadAutocompletionData } from "./glua/wikiScraper";
 import { GLuaHoverProvider } from "./hoverProvider";
-import { ImplementThemeSelector } from "./themeProvider";
 import { ImplementNotifications } from "./notificationProvider";
-import { ImplementExecution } from "./glua/executionProvider";
+import { ImplementSuggestionFix } from "./suggestionFix";
+import { ThemeLoader } from "./themeLoader";
+import { ImplementThemeSelector } from "./themeProvider";
+
 import "./editor.css";
 
 const themeLoader: ThemeLoader = new ThemeLoader();
@@ -83,4 +85,5 @@ themePromise.finally(() => {
     ImplementThemeSelector(themeLoader.getLoadedThemes());
     ImplementNotifications();
     ImplementExecution();
+    ImplementSuggestionFix();
 });
