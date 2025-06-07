@@ -7,7 +7,6 @@ enum SuggestState {
 }
 
 export async function ImplementSuggestionFix(): Promise<void> {
-    console.log("implementing suggestion fix", SuggestState);
     editor?.addCommand(monaco.KeyCode.Escape, () => {
         const suggest = editor?.getContribution(
             "editor.contrib.suggestController",
