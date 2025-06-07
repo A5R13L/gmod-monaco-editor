@@ -162,16 +162,9 @@ export interface SuggestController {
     toggleSuggestionDetails(): void;
     toggleSuggestionFocus(): void;
 
-    model: {
-        state: "idle" | "manual" | "auto" | "loading" | "frozen";
-        widgetVisible: boolean;
-        selectedSuggestion?: any;
-        getSelectedSuggestion(): any;
-    };
-
-    // Only present if using `editor.getContribution('editor.contrib.suggestController')`
     widget: {
-        showTriggered: boolean;
-        visible: boolean;
+        _value: {
+            _state: number;
+        };
     };
 }
