@@ -51,7 +51,7 @@ const editor = monaco.editor.create(
         autoIndent: "full",
         formatOnPaste: true,
         formatOnType: true,
-        acceptSuggestionOnEnter: "off",
+        acceptSuggestionOnEnter: "smart",
     },
     {
         storageService: {
