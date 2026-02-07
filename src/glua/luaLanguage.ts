@@ -1,209 +1,209 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export const conf: monaco.languages.LanguageConfiguration = {
-    comments: {
-        lineComment: "--",
-        blockComment: ["--[[", "]]"],
-    },
+	comments: {
+		lineComment: "--",
+		blockComment: ["--[[", "]]"],
+	},
 
-    brackets: [
-        ["{", "}"],
-        ["[", "]"],
-        ["(", ")"],
-    ],
+	brackets: [
+		["{", "}"],
+		["[", "]"],
+		["(", ")"],
+	],
 
-    autoClosingPairs: [
-        { open: "{", close: "}" },
-        { open: "[", close: "]" },
-        { open: "(", close: ")" },
-        { open: '"', close: '"', notIn: ["string"] },
-        { open: "'", close: "'", notIn: ["string"] },
-    ],
+	autoClosingPairs: [
+		{ open: "{", close: "}" },
+		{ open: "[", close: "]" },
+		{ open: "(", close: ")" },
+		{ open: '"', close: '"', notIn: ["string"] },
+		{ open: "'", close: "'", notIn: ["string"] },
+	],
 
-    surroundingPairs: [
-        { open: "{", close: "}" },
-        { open: "[", close: "]" },
-        { open: "(", close: ")" },
-        { open: '"', close: '"' },
-        { open: "'", close: "'" },
-    ],
+	surroundingPairs: [
+		{ open: "{", close: "}" },
+		{ open: "[", close: "]" },
+		{ open: "(", close: ")" },
+		{ open: '"', close: '"' },
+		{ open: "'", close: "'" },
+	],
 
-    indentationRules: {
-        increaseIndentPattern: new RegExp(
-            "^((?!(\\-\\-)).)*((\\b(else|function|then|do|repeat)\\b((?!\\b(end|until)\\b).)*)|(\\{\\s*))$",
-        ),
+	indentationRules: {
+		increaseIndentPattern: new RegExp(
+			"^((?!(\\-\\-)).)*((\\b(else|function|then|do|repeat)\\b((?!\\b(end|until)\\b).)*)|(\\{\\s*))$",
+		),
 
-        decreaseIndentPattern: new RegExp(
-            "^\\s*((\\b(elseif|else|end|until)\\b)|(\\})|(\\)))",
-        ),
-    },
+		decreaseIndentPattern: new RegExp(
+			"^\\s*((\\b(elseif|else|end|until)\\b)|(\\})|(\\)))",
+		),
+	},
 };
 
 export const language: monaco.languages.IMonarchLanguage = {
-    defaultToken: "",
-    tokenPostfix: ".lua",
+	defaultToken: "",
+	tokenPostfix: ".lua",
 
-    keywords: [
-        "and",
-        "break",
-        "do",
-        "else",
-        "elseif",
-        "end",
-        "false",
-        "for",
-        "function",
-        "goto",
-        "if",
-        "in",
-        "local",
-        "nil",
-        "not",
-        "or",
-        "repeat",
-        "return",
-        "then",
-        "true",
-        "until",
-        "while",
-        "continue",
-    ],
+	keywords: [
+		"and",
+		"break",
+		"do",
+		"else",
+		"elseif",
+		"end",
+		"false",
+		"for",
+		"function",
+		"goto",
+		"if",
+		"in",
+		"local",
+		"nil",
+		"not",
+		"or",
+		"repeat",
+		"return",
+		"then",
+		"true",
+		"until",
+		"while",
+		"continue",
+	],
 
-    brackets: [
-        { token: "delimiter.bracket", open: "{", close: "}" },
-        { token: "delimiter.array", open: "[", close: "]" },
-        { token: "delimiter.parenthesis", open: "(", close: ")" },
-    ],
+	brackets: [
+		{ token: "delimiter.bracket", open: "{", close: "}" },
+		{ token: "delimiter.array", open: "[", close: "]" },
+		{ token: "delimiter.parenthesis", open: "(", close: ")" },
+	],
 
-    operators: [
-        "+",
-        "-",
-        "*",
-        "/",
-        "%",
-        "^",
-        "#",
-        "==",
-        "~=",
-        "<=",
-        ">=",
-        "<",
-        ">",
-        "=",
-        ";",
-        ":",
-        ",",
-        ".",
-        "..",
-        "...",
-        "&&",
-        "!",
-        "!=",
-        "||",
-    ],
+	operators: [
+		"+",
+		"-",
+		"*",
+		"/",
+		"%",
+		"^",
+		"#",
+		"==",
+		"~=",
+		"<=",
+		">=",
+		"<",
+		">",
+		"=",
+		";",
+		":",
+		",",
+		".",
+		"..",
+		"...",
+		"&&",
+		"!",
+		"!=",
+		"||",
+	],
 
-    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+	symbols: /[=><!~?:&|+\-*\/\^%]+/,
 
-    escapes:
-        /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+	escapes:
+		/\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 
-    tokenizer: {
-        root: [
-            [
-                /[a-zA-Z_]\w*/,
-                {
-                    cases: {
-                        "@keywords": { token: "keyword.$0" },
-                        "@default": "identifier",
-                    },
-                },
-            ],
+	tokenizer: {
+		root: [
+			[
+				/[a-zA-Z_]\w*/,
+				{
+					cases: {
+						"@keywords": { token: "keyword.$0" },
+						"@default": "identifier",
+					},
+				},
+			],
 
-            { include: "@whitespace" },
+			{ include: "@whitespace" },
 
-            [
-                /(,)(\s*)([a-zA-Z_]\w*)(\s*)(:)(?!:)/,
-                ["delimiter", "", "key", "", "delimiter"],
-            ],
+			[
+				/(,)(\s*)([a-zA-Z_]\w*)(\s*)(:)(?!:)/,
+				["delimiter", "", "key", "", "delimiter"],
+			],
 
-            [
-                /({)(\s*)([a-zA-Z_]\w*)(\s*)(:)(?!:)/,
-                ["@brackets", "", "key", "", "delimiter"],
-            ],
+			[
+				/({)(\s*)([a-zA-Z_]\w*)(\s*)(:)(?!:)/,
+				["@brackets", "", "key", "", "delimiter"],
+			],
 
-            [/\[(=*)\[/, "string", "@string_multiline"],
+			[/\[(=*)\[/, "string", "@string_multiline"],
 
-            [/[{}()\[\]]/, "@brackets"],
+			[/[{}()\[\]]/, "@brackets"],
 
-            [
-                /@symbols/,
-                {
-                    cases: {
-                        "@operators": "delimiter",
-                        "@default": "",
-                    },
-                },
-            ],
+			[
+				/@symbols/,
+				{
+					cases: {
+						"@operators": "delimiter",
+						"@default": "",
+					},
+				},
+			],
 
-            [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
-            [/0[xX][0-9a-fA-F_]*[0-9a-fA-F]/, "number.hex"],
-            [/\d+?/, "number"],
+			[/\d*\.\d+([eE][\-+]?\d+)?/, "number.float"],
+			[/0[xX][0-9a-fA-F_]*[0-9a-fA-F]/, "number.hex"],
+			[/\d+?/, "number"],
 
-            [/[;,.]/, "delimiter"],
+			[/[;,.]/, "delimiter"],
 
-            [/"([^"\\]|\\.)*$/, "string.invalid"],
-            [/'([^'\\]|\\.)*$/, "string.invalid"],
-            [/"/, "string", '@string."'],
-            [/'/, "string", "@string.'"],
-        ],
+			[/"([^"\\]|\\.)*$/, "string.invalid"],
+			[/'([^'\\]|\\.)*$/, "string.invalid"],
+			[/"/, "string", '@string."'],
+			[/'/, "string", "@string.'"],
+		],
 
-        string_multiline: [
-            [/[^\\\]\\\]]+/, "string"],
-            [/@escapes/, "string.escape"],
-            [/\\./, "string.escape.invalid"],
-            [/\](=*)\]/, "string", "@pop"],
-        ],
+		string_multiline: [
+			[/[^\\\]\\\]]+/, "string"],
+			[/@escapes/, "string.escape"],
+			[/\\./, "string.escape.invalid"],
+			[/\](=*)\]/, "string", "@pop"],
+		],
 
-        whitespace: [
-            [/[ \t\r\n]+/, ""],
-            [/\/\*/, "comment", "@comment"],
-            [/\/\/.*$/, "comment"],
-            [/--\[([=]*)\[/, "comment", "@comment.$1"],
-            [/--.*$/, "comment"],
-        ],
+		whitespace: [
+			[/[ \t\r\n]+/, ""],
+			[/\/\*/, "comment", "@comment"],
+			[/\/\/.*$/, "comment"],
+			[/--\[([=]*)\[/, "comment", "@comment.$1"],
+			[/--.*$/, "comment"],
+		],
 
-        comment: [
-            [/\/\*/, "comment", "@push"], // nested comment
-            [/\*\//, "comment", "@pop"],
-            [/[\/*]/, "comment"],
+		comment: [
+			[/\/\*/, "comment", "@push"],
+			[/\*\//, "comment", "@pop"],
+			[/[\/*]/, "comment"],
 
-            [
-                /\]([=]*)\]/,
-                {
-                    cases: {
-                        "$1==$S2": { token: "comment", next: "@pop" },
-                        "@default": "comment",
-                    },
-                },
-            ],
+			[
+				/\]([=]*)\]/,
+				{
+					cases: {
+						"$1==$S2": { token: "comment", next: "@pop" },
+						"@default": "comment",
+					},
+				},
+			],
 
-            [/./, "comment.content"],
-        ],
+			[/./, "comment.content"],
+		],
 
-        string: [
-            [/[^\\"']+/, "string"],
-            [/@escapes/, "string.escape"],
-            [/\\./, "string.escape.invalid"],
+		string: [
+			[/[^\\"']+/, "string"],
+			[/@escapes/, "string.escape"],
+			[/\\./, "string.escape.invalid"],
 
-            [
-                /["']/,
-                {
-                    cases: {
-                        "$#==$S2": { token: "string", next: "@pop" },
-                        "@default": "string",
-                    },
-                },
-            ],
-        ],
-    },
+			[
+				/["']/,
+				{
+					cases: {
+						"$#==$S2": { token: "string", next: "@pop" },
+						"@default": "string",
+					},
+				},
+			],
+		],
+	},
 };

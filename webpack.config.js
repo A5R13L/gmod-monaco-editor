@@ -8,7 +8,7 @@ const smp = new SpeedMeasurePlugin();
 module.exports = smp.wrap({
     mode: "production",
     entry: {
-        index: "./src/index.ts",
+        index: "./src/index.tsx",
     },
     watchOptions: {
         ignored: /node_modules/
@@ -21,11 +21,11 @@ module.exports = smp.wrap({
     module: {
         rules: [
             {
-                test: /\.ts?$/,
+                test: /\.tsx?$/,
                 loader: "babel-loader",
                 exclude: /node_modules/,
                 options: {
-                    presets: ["@babel/env", "@babel/preset-typescript"]
+                    presets: ["@babel/env", "@babel/preset-react", "@babel/preset-typescript"]
                 }
             },
             {
@@ -39,7 +39,7 @@ module.exports = smp.wrap({
         ],
     },
     resolve: {
-        extensions: [".ts", ".js", ".json"]
+        extensions: [".tsx", ".ts", ".js", ".json"]
     },
     plugins: [
         new MonacoWebpackPlugin({

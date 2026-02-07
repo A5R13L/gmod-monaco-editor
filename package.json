@@ -8,10 +8,14 @@
         "watch": "webpack serve --open",
         "dev": "webpack-dev-server"
     },
-    "dependencies": {},
+    "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
     "devDependencies": {
         "@babel/core": "^7.23.9",
         "@babel/preset-env": "^7.23.9",
+        "@babel/preset-react": "^7.23.3",
         "@babel/preset-typescript": "^7.23.3",
         "axios": "^1.6.7",
         "babel-loader": "^9.1.3",
@@ -29,6 +33,8 @@
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.3.3",
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
         "webpack": "^5.90.1",
         "webpack-cli": "^5.1.4",
         "webpack-dev-server": "^5.0.1"
