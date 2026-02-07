@@ -20,9 +20,11 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const useNotifications = () => {
     const context = useContext(NotificationContext);
+
     if (!context) {
         throw new Error("useNotifications must be used within NotificationProvider");
     }
+
     return context;
 };
 

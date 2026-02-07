@@ -16,9 +16,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const useTheme = () => {
     const context = useContext(ThemeContext);
+
     if (!context) {
         throw new Error("useTheme must be used within ThemeProvider");
     }
+
     return context;
 };
 
@@ -49,6 +51,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const setTheme = useCallback((themeId: string) => {
         monaco.editor.setTheme(themeId);
         setCurrentTheme(themeId);
+
         if (gmodInterface) {
             gmodInterface.OnThemeChanged(themeId);
         }
