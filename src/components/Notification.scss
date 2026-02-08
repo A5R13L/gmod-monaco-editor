@@ -1,36 +1,74 @@
 .monaco-notification {
     background: var(--vscode-input-background);
-    height: 42px;
     display: flex;
-    transform: translate3d(0, 100%, 0);
     flex-direction: row;
     padding: 10px 5px;
     box-sizing: border-box;
     border-radius: 4px;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    height: 42px;
+    transform: translate3d(0, 100%, 0);
     opacity: 0;
+    transition:
+        transform 0.3s ease-out,
+        opacity 0.3s ease-out;
     align-items: center;
+
+    &:focus {
+        outline-color: transparent;
+    }
 
     &.fade-in {
         opacity: 1;
-        transform: none;
+        transform: translate3d(0, 0, 0);
     }
 
     &.no-border {
         border-radius: 0 !important;
     }
 
-    .notification-icon {
+    &:not(:hover)>.monaco-action-bar {
+        display: none;
+    }
+
+    >.notification-icon {
         display: flex;
         align-items: center;
         flex: 0 0 16px;
         height: 22px;
-        margin-right: 4px;
-        margin-left: 4px;
+        margin: 0 4px;
         font-size: 18px;
+        background-position: 50%;
+        background-repeat: no-repeat;
     }
 
-    .notification-text {
+    >.notification-dismiss-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        margin: 0 4px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 4px;
+        background: transparent;
+        transition: background 0.1s ease;
+
+        &:hover {
+            background: rgba(90, 93, 94, 0.31);
+        }
+    }
+
+    &.menu-closed>.notification-dismiss-container {
+        display: none;
+    }
+
+    &.menu-closed:hover>.notification-dismiss-container {
+        display: flex;
+    }
+
+    >.notification-text {
         font-size: 13px;
         line-height: 22px;
         overflow: hidden;
@@ -38,36 +76,34 @@
         flex: 1;
         user-select: text;
         -webkit-user-select: text;
-    }
+        color: var(--vscode-foreground);
 
-    .notification-text>span {
-        white-space: normal;
-    }
-
-    .notification-dismiss-container {
-        display: flex;
-        align-items: center;
-        flex: 0 0 16px;
-        height: 22px;
-        margin-right: 4px;
-        margin-left: 4px;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-    &:hover {
-        .notification-dismiss-container {
-            background: rgba(90, 93, 94, 0.31);
-            border-radius: 4px;
+        >span {
+            white-space: normal;
         }
     }
 
-    .notification-duration {
+    >.notification-duration {
         height: 3px;
         position: absolute;
-        bottom: 0px;
+        bottom: 0;
         left: -1px;
         width: 101%;
-    }
 
+        &.codicon-color-hint {
+            background: rgba(238, 238, 238, 0.7);
+        }
+
+        &.codicon-color-error {
+            background: #f14c4c;
+        }
+
+        &.codicon-color-warning {
+            background: #cca700;
+        }
+
+        &.codicon-color-info {
+            background: #3794ff;
+        }
+    }
 }

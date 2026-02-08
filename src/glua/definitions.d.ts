@@ -24,9 +24,9 @@ export interface EditorSessionObject {
 
 declare global {
 	export namespace globalThis {
-		var gmodinterface: GmodInterface | undefined;
-		var editor: monaco.editor.IStandaloneCodeEditor | undefined;
-		var notificationProvider: NotificationProvider | undefined;
+		var gmodInterface: GmodInterface;
+		var monacoEditor: monaco.editor.IStandaloneCodeEditor;
+		var notificationProvider: NotificationProvider;
 	}
 }
 
@@ -42,7 +42,7 @@ export interface GmodInterface {
 }
 
 export interface ExtendedGmodInterface extends GmodInterface {
-	editor?: monaco.editor.IStandaloneCodeEditor;
+	editor: monaco.editor.IStandaloneCodeEditor;
 	SetEditor(editor: monaco.editor.IStandaloneCodeEditor): void;
 	SetCode(code: string): void;
 	SetTheme(themeName: string): void;

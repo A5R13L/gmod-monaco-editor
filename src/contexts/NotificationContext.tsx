@@ -11,9 +11,11 @@ interface NotificationContextType {
     show: () => void;
     hide: () => void;
     clear: () => void;
+    toggle: () => void;
     addNotification: (notification: Omit<NotificationData, "id">) => void;
     removeNotification: (id: string) => void;
     toggleDoNotDisturb: () => void;
+    markNotificationFadedIn: (id: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -37,14 +39,27 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     const [isVisible, setIsVisible] = useState(false);
     const [doNotDisturb, setDoNotDisturb] = useState(false);
     const notificationIdCounter = useRef(0);
+    const notificationsOnOpenRef = useRef<Set<string>>(new Set());
     const { editor } = useEditor();
 
     const show = useCallback(() => {
+        setNotifications((prev) => {
+            notificationsOnOpenRef.current = new Set(prev.map((n) => n.id));
+            return prev.map((n) => ({ ...n, hidden: false, viewed: true }));
+        });
+
         setIsVisible(true);
     }, []);
 
     const hide = useCallback(() => {
         setIsVisible(false);
+
+        setNotifications((prev) =>
+            prev.map((n) => ({
+                ...n,
+                hidden: notificationsOnOpenRef.current.has(n.id) ? true : n.hidden,
+            })),
+        );
     }, []);
 
     const clear = useCallback(() => {
@@ -52,29 +67,50 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         setIsVisible(false);
     }, []);
 
+    const toggle = useCallback(() => {
+        if (isVisible)
+            hide();
+        else
+            show();
+    }, [isVisible, hide, show]);
+
     const removeNotification = useCallback((id: string) => {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, []);
 
     const addNotification = useCallback((notification: Omit<NotificationData, "id">) => {
         const id = `notification-${notificationIdCounter.current++}`;
-        const newNotification: NotificationData = { ...notification, id };
+
+        const newNotification: NotificationData = {
+            ...notification,
+            id,
+            durationStartTime: notification.expires ? Date.now() : undefined,
+        };
+
+        if (doNotDisturb)
+            newNotification.hidden = true;
 
         setNotifications((prev) => {
             const filtered = prev.filter(
                 (n) => !(n.label === notification.label && n.type === notification.type),
             );
 
-            return [...filtered, newNotification];
-        });
+            const updatedNotifications = !isVisible
+                ? filtered.map((n) => ({ ...n, hidden: true }))
+                : filtered;
 
-        if (!doNotDisturb) {
-            show();
-        }
-    }, [doNotDisturb, show]);
+            return [...updatedNotifications, newNotification];
+        });
+    }, [doNotDisturb, isVisible]);
 
     const toggleDoNotDisturb = useCallback(() => {
         setDoNotDisturb((prev) => !prev);
+    }, []);
+
+    const markNotificationFadedIn = useCallback((id: string) => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, hasFadedIn: true } : n)),
+        );
     }, []);
 
     useEffect(() => {
@@ -117,8 +153,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             },
         });
 
-        editor.addCommand(monaco.KeyCode.Escape, () => {
-            hide();
+        window.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                hide();
+            }
         });
 
         return () => {
@@ -155,9 +193,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                 show,
                 hide,
                 clear,
+                toggle,
                 addNotification,
                 removeNotification,
                 toggleDoNotDisturb,
+                markNotificationFadedIn,
             }}
         >
             {children}

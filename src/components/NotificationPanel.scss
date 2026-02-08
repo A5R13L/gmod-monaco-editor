@@ -6,42 +6,68 @@
     overflow: hidden;
     border-radius: 4px;
     width: 450px;
+    outline-color: transparent !important;
 
-    .monaco-notifications-header {
+    @media (max-width: 449.98px) {
+        width: 100% !important;
+    }
+
+    &:focus {
+        outline-color: transparent;
+    }
+
+    >.monaco-notifications-header {
         display: flex;
         align-items: center;
         padding-left: 8px;
         padding-right: 5px;
         height: 35px;
 
-        .monaco-notifications-header-title {
+        >.monaco-notifications-header-title {
             text-transform: uppercase;
             font-size: 11px;
         }
 
-        .monaco-notifications-header-toolbar {
+        >.monaco-notifications-header-toolbar {
             flex: 1;
+
+            .actions-container {
+                justify-content: flex-end;
+            }
+
+            .action-item {
+                margin-right: 4px;
+
+                &:first-child {
+                    margin-left: 4px;
+                }
+            }
         }
-
-        .actions-container {
-            justify-content: flex-end;
-        }
     }
+}
 
-    .action-item:first-child {
-        margin-left: 4px;
-    }
+.hidden {
+    display: none !important;
+    pointer-events: none !important;
+}
 
-    .action-item {
-        margin-right: 4px;
+.monaco-notifications-container {
+    &:focus {
+        outline-color: transparent;
     }
+}
+
+
+.monaco-notification-content {
+    display: flex;
+    flex-grow: 1;
 }
 
 .monaco-action-bar {
     white-space: nowrap;
     height: 100%;
 
-    &.actions-container {
+    .actions-container {
         display: flex;
         margin: 0 auto;
         padding: 0;
@@ -53,25 +79,22 @@
 
 .action-label:not(.disabled):hover {
     background: rgba(90, 93, 94, 0.31);
-    cursor: pointer;
 }
 
-.action-label.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.codicon {
+    &[class*="codicon-"] {
+        font-size: 16px;
+    }
 }
 
-.codicon[class*="codicon-"] {
-    font-size: 16px;
+.codicon-color-error {
+    color: #f14c4c;
 }
 
-.monaco-notifications-container {
-    max-height: 50vh;
-    overflow-y: auto;
+.codicon-color-warning {
+    color: #cca700;
 }
 
-.monaco-list.mouse-support {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.codicon-color-info {
+    color: #3794ff;
 }

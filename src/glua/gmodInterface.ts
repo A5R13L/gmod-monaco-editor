@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { GmodInterfaceValue } from "./gmodInterfaceValue";
+import { GluaInterface } from "./luaInterface";
 import { EditorSession } from "./editorSession";
 import { autocompletionData, ResetAutocomplete } from "./autocompletionData";
 import { LoadAutocompletionData, AddCustomData } from "./wikiScraper";
@@ -14,36 +14,47 @@ import {
 	Snippet,
 } from "./definitions";
 
-let currentSession: EditorSession | undefined;
-export const sessions: Map<string, EditorSession> = new Map();
-const request = axios.create();
+export const editorSessions: Map<string, EditorSession> = new Map();
+export var gmodInterface: ExtendedGmodInterface | undefined;
+export var currentEditorSession: EditorSession | undefined;
 
-if (!globalThis.gmodinterface) {
-	globalThis.gmodinterface = {
-		OnReady: console.log,
-		OnCode: console.log,
-		OpenURL: console.log,
-		OnThemeChanged: console.log,
-		OnSessionSet: console.log,
-		OnAction: console.log,
-		OnSessions: console.log,
-		OnExecute: console.log,
+const request = axios.create({});
+
+if (!globalThis.gmodInterface) {
+	const interfaceLogger = (name: string) => {
+		return (...args: any[]) => {
+			console.log(
+				`%cGMod Interface%c${name}`,
+				"background-color: rgb(30, 100, 255); color: white; padding: 2px 4px; border-radius: 4px; margin-right: 5px;",
+				"background-color: rgb(200, 150, 200); color: white; padding: 2px 4px; border-radius: 4px;",
+				...args
+			);
+		}
+	}
+
+	globalThis.gmodInterface = {
+		OnReady: interfaceLogger("OnReady"),
+		OnCode: interfaceLogger("OnCode"),
+		OpenURL: interfaceLogger("OpenURL"),
+		OnThemeChanged: interfaceLogger("OnThemeChanged"),
+		OnSessionSet: interfaceLogger("OnSessionSet"),
+		OnAction: interfaceLogger("OnAction"),
+		OnSessions: interfaceLogger("OnSessions"),
+		OnExecute: interfaceLogger("OnExecute"),
 	};
 
-	console.warn(
-		"gmodInterface was not defined, are we running in a browser context?",
-	);
+	console.log("%cGMod Interface", "background-color: rgb(204, 160, 0); color: white; padding: 2px 4px; border-radius: 4px;", "Browser context detected, limited functionality will be available.");
 }
 
-let maybeGmodInterface: ExtendedGmodInterface | undefined;
-if (globalThis.gmodinterface) {
-	maybeGmodInterface = {
-		...globalThis.gmodinterface,
+if (globalThis.gmodInterface) {
+	gmodInterface = {
+		editor: globalThis.monacoEditor,
+		...globalThis.gmodInterface,
 
 		SetEditor(editor: monaco.editor.IStandaloneCodeEditor): void {
 			this.editor = editor;
 
-			globalThis.editor = editor;
+			globalThis.monacoEditor = editor;
 
 			editor.onDidChangeModelContent(() => {
 				this.OnCode(
@@ -64,12 +75,12 @@ if (globalThis.gmodinterface) {
 		SetCode(code: string, keepViewState: boolean = false): void {
 			let viewState: monaco.editor.ICodeEditorViewState;
 
-			if (keepViewState) viewState = this.editor!.saveViewState()!;
+			if (keepViewState) viewState = this.editor.saveViewState()!;
 
-			this.editor!.setValue(code);
+			this.editor.setValue(code);
 
-			if (keepViewState) this.editor!.restoreViewState(viewState!);
-			if (currentSession) this.SaveSession();
+			if (keepViewState) this.editor.restoreViewState(viewState!);
+			if (currentEditorSession) this.SaveSession();
 		},
 
 		SetTheme(themeName: string): void {
@@ -77,7 +88,7 @@ if (globalThis.gmodinterface) {
 		},
 
 		SetLanguage(langId: string): void {
-			monaco.editor.setModelLanguage(this.editor!.getModel()!, langId);
+			monaco.editor.setModelLanguage(this.editor.getModel()!, langId);
 		},
 
 		GotoLine(lineNumber: number): void {
@@ -86,9 +97,9 @@ if (globalThis.gmodinterface) {
 				column: 1,
 			};
 
-			this.editor!.setPosition(position);
+			this.editor.setPosition(position);
 
-			this.editor!.revealPositionInCenterIfOutsideViewport(
+			this.editor.revealPositionInCenterIfOutsideViewport(
 				position,
 				monaco.editor.ScrollType.Smooth,
 			);
@@ -111,62 +122,67 @@ if (globalThis.gmodinterface) {
 			);
 
 			monaco.editor.setModelMarkers(
-				this.editor!.getModel()!,
+				this.editor.getModel()!,
 				"luacheck",
 				markers,
 			);
 		},
 
 		SaveSession(): void {
-			currentSession!.code = this.editor!.getValue();
-			currentSession!.model = this.editor!.getModel()!;
-			currentSession!.viewState = this.editor!.saveViewState()!;
+			if (!currentEditorSession) return;
 
-			sessions.set(currentSession!.name, currentSession!);
+			currentEditorSession.code = this.editor.getValue();
+			currentEditorSession.model = this.editor.getModel()!;
+			currentEditorSession.viewState = this.editor.saveViewState()!;
+
+			editorSessions.set(currentEditorSession.name, currentEditorSession);
 		},
 
 		RenameSession(newName: string, oldName?: string) {
-			if (!currentSession || (oldName && !sessions.has(oldName))) {
+			if (!currentEditorSession || (oldName && !editorSessions.has(oldName))) {
 				console.error("Cant find session to rename");
 
 				return;
 			}
 
-			if (sessions.has(newName)) {
+			if (editorSessions.has(newName)) {
 				console.error("Cant rename session, name already taken");
 
 				return;
 			}
-			const session = oldName ? sessions.get(oldName) : currentSession;
+			const session = oldName ? editorSessions.get(oldName) : currentEditorSession;
 
-			sessions.delete(session!.name);
+			editorSessions.delete(session!.name);
 
 			session!.name = newName;
 
-			sessions.set(newName, session!);
+			editorSessions.set(newName, session!);
 		},
 		SetSession(name: string) {
-			if (!sessions.has(name)) {
+			const session = editorSessions.get(name);
+
+			if (!session) {
 				console.error(`Cant find session named ${name}`);
 
 				return;
 			}
 
-			if (currentSession) this.SaveSession();
+			if (currentEditorSession) this.SaveSession();
 
-			const session = sessions.get(name)!;
+			this.editor.setModel(session.model);
 
-			this.editor!.setModel(session.model);
+			if (session.viewState)
+				this.editor.restoreViewState(session.viewState);
 
-			if (session!.viewState)
-				this.editor!.restoreViewState(session.viewState);
-
-			currentSession = session;
+			currentEditorSession = session;
 
 			this.OnSessionSet(session.getSerializable());
 
+			const model = this.editor.getModel();
+			if (!model) return;
+
 			monaco.editor.setModelMarkers(
-				this.editor!.getModel()!,
+				model,
 				"luacheck",
 				[],
 			);
@@ -177,7 +193,7 @@ if (globalThis.gmodinterface) {
 		): EditorSession | undefined {
 			const session = EditorSession.fromObject(sessionObj);
 
-			if (sessions.has(session.name)) {
+			if (editorSessions.has(session.name)) {
 				console.error(
 					`Cant add session named ${session.name}, name already taken`,
 				);
@@ -185,14 +201,14 @@ if (globalThis.gmodinterface) {
 				return;
 			}
 
-			sessions.set(session.name, session);
+			editorSessions.set(session.name, session);
 			this.SetSession(session.name);
 
 			return session;
 		},
 
 		CloseSession(sessionName?: string, switchTo?: string): void {
-			if (sessionName && !sessions.has(sessionName)) {
+			if (sessionName && !editorSessions.has(sessionName)) {
 				console.error(
 					`Cant close session named ${sessionName}, it does not exist`,
 				);
@@ -201,15 +217,15 @@ if (globalThis.gmodinterface) {
 			}
 
 			const session = sessionName
-				? sessions.get(sessionName)!
-				: currentSession!;
+				? editorSessions.get(sessionName)!
+				: currentEditorSession!;
 
-			sessions.delete(session.name);
+			editorSessions.delete(session.name);
 
-			if (session === currentSession) {
-				currentSession = undefined;
+			if (session === currentEditorSession) {
+				currentEditorSession = undefined;
 
-				if (switchTo && sessions.has(switchTo))
+				if (switchTo && editorSessions.has(switchTo))
 					this.SetSession(switchTo);
 				else this.CreateSession({ code: "" });
 			}
@@ -221,31 +237,31 @@ if (globalThis.gmodinterface) {
 			list.forEach((sessionObj) => {
 				const session = EditorSession.fromObject(sessionObj);
 
-				sessions.set(session.name, session);
+				editorSessions.set(session.name, session);
 			});
 
 			if (newActive) this.SetSession(newActive);
 		},
 
 		SetSessionCode(sessionName: string, code: string): void {
-			if (!sessions.has(sessionName))
+			if (!editorSessions.has(sessionName))
 				console.error(
 					`Cant set code for session session named ${sessionName}, it does not exist`,
 				);
 
-			sessions.get(sessionName)?.model.setValue(code);
+			editorSessions.get(sessionName)?.model.setValue(code);
 		},
 
 		AddAutocompleteValue(value: object): void {
 			autocompletionData.AddNewInterfaceValue(
-				new GmodInterfaceValue(value),
+				new GluaInterface(value),
 			);
 		},
 
 		AddAutocompleteValues(valuesArray: object[]): void {
 			valuesArray.forEach((val: any) => {
 				autocompletionData.AddNewInterfaceValue(
-					new GmodInterfaceValue(val),
+					new GluaInterface(val),
 				);
 			});
 		},
@@ -276,7 +292,7 @@ if (globalThis.gmodinterface) {
 
 				if (!autocompletionData.valuesLookup.has(value))
 					autocompletionData.AddNewInterfaceValue(
-						new GmodInterfaceValue({
+						new GluaInterface({
 							name,
 							fullname: value,
 						}),
@@ -323,7 +339,7 @@ if (globalThis.gmodinterface) {
 					}
 
 					autocompletionData.AddNewInterfaceValue(
-						new GmodInterfaceValue({
+						new GluaInterface({
 							name,
 							parent,
 							fullname: func,
@@ -333,7 +349,7 @@ if (globalThis.gmodinterface) {
 					);
 				} else if (!autocompletionData.valuesLookup.has(func))
 					autocompletionData.AddNewInterfaceValue(
-						new GmodInterfaceValue({
+						new GluaInterface({
 							name,
 							parent,
 							fullname: func,
@@ -390,7 +406,7 @@ if (globalThis.gmodinterface) {
 					newAction.keybindings!.push(eval(obj));
 				});
 
-			this.editor!.addAction(newAction);
+			this.editor.addAction(newAction);
 		},
 
 		LoadAutocompleteState(state: string): Promise<void> {
@@ -404,7 +420,7 @@ if (globalThis.gmodinterface) {
 
 		async ExtendAutocompleteWithURL(url: string): Promise<void> {
 			try {
-				AddCustomData((await request(url)).data);
+				AddCustomData((await request.get(url)).data as any[]);
 			} catch (Error) { }
 		},
 
@@ -417,7 +433,7 @@ if (globalThis.gmodinterface) {
 
 			const serializableSessions: object[] = [];
 
-			sessions.forEach((session: EditorSession) => {
+			editorSessions.forEach((session: EditorSession) => {
 				serializableSessions.push(session.getSerializable());
 			});
 
@@ -425,7 +441,5 @@ if (globalThis.gmodinterface) {
 		},
 	};
 
-	globalThis.gmodinterface = maybeGmodInterface;
+	globalThis.gmodInterface = gmodInterface;
 }
-
-export const gmodInterface = maybeGmodInterface;

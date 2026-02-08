@@ -1,20 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { useNotifications } from "../contexts/NotificationContext";
 import { Notification } from "./Notification";
-import "./NotificationPanel.css";
+import "./NotificationPanel.scss";
+import { cn } from "../utils";
 
 export const NotificationPanel: React.FC = () => {
-    const {
-        notifications,
-        isVisible,
-        hasNotifications,
-        doNotDisturb,
-        show,
-        hide,
-        clear,
-        toggleDoNotDisturb,
-        removeNotification,
-    } = useNotifications();
+    const notifications = useNotifications();
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -34,22 +25,22 @@ export const NotificationPanel: React.FC = () => {
         return () => window.removeEventListener("resize", updateLayout);
     }, []);
 
-    if (!isVisible && !hasNotifications) {
+    if (!notifications.isVisible && !notifications.hasNotifications) {
         return null;
     }
 
     return (
         <div
             ref={containerRef}
-            className={`monaco-notifications ${isVisible ? "monaco-editor" : ""}`}
+            className="monaco-notifications monaco-editor"
             style={{
-                boxShadow: isVisible ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px" : undefined,
+                boxShadow: notifications.isVisible ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px" : undefined
             }}
         >
-            <div className={`monaco-notifications-header ${!isVisible ? "hidden" : ""}`}>
+            <div className={cn("monaco-notifications-header", !notifications.isVisible && "hidden")}>
                 <span className="monaco-notifications-header-title">
-                    {hasNotifications
-                        ? `Notifications (${notifications.length})`
+                    {notifications.hasNotifications
+                        ? `Notifications (${notifications.notifications.length})`
                         : "No New Notifications"}
                 </span>
                 <div className="monaco-notifications-header-toolbar">
@@ -57,20 +48,16 @@ export const NotificationPanel: React.FC = () => {
                         <ul className="actions-container">
                             <li className="action-item">
                                 <a
-                                    className={`action-label codicon codicon-clear-all ${
-                                        !hasNotifications ? "disabled" : ""
-                                    }`}
-                                    onClick={clear}
+                                    className={cn("action-label codicon codicon-clear-all", !notifications.hasNotifications && "disabled")}
+                                    onClick={notifications.clear}
                                     role="button"
                                     tabIndex={0}
                                 />
                             </li>
                             <li className="action-item">
                                 <a
-                                    className={`action-label codicon codicon-${
-                                        doNotDisturb ? "bell-slash" : "bell"
-                                    }`}
-                                    onClick={toggleDoNotDisturb}
+                                    className={cn("action-label codicon", `codicon-${notifications.doNotDisturb ? "bell-slash" : "bell"}`)}
+                                    onClick={notifications.toggleDoNotDisturb}
                                     role="button"
                                     tabIndex={0}
                                 />
@@ -78,7 +65,7 @@ export const NotificationPanel: React.FC = () => {
                             <li className="action-item">
                                 <a
                                     className="action-label codicon codicon-chevron-down"
-                                    onClick={hide}
+                                    onClick={notifications.hide}
                                     role="button"
                                     tabIndex={0}
                                 />
@@ -87,18 +74,42 @@ export const NotificationPanel: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div className="monaco-notifications-container">
-                <div className="monaco-list mouse-support">
-                    {notifications.map((notification) => (
-                        <Notification
-                            key={notification.id}
-                            notification={notification}
-                            onDismiss={removeNotification}
-                            showBorder={!isVisible}
-                        />
-                    ))}
+            {notifications.isVisible ? (
+                <div className="monaco-notifications-container">
+                    <div className="monaco-list mouse-support">
+                        {notifications.notifications.map((notification) => (
+                            <Notification
+                                key={notification.id}
+                                notification={notification}
+                                onDismiss={notifications.removeNotification}
+                                showBorder={!notifications.isVisible}
+                                onFadeIn={notifications.markNotificationFadedIn}
+                            />
+                        ))}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="monaco-notifications-container">
+                    <div className="monaco-list mouse-support">
+                        {(() => {
+                            const visibleNotifications = notifications.notifications.filter(
+                                (notification) => !notification.hidden
+                            );
+                            const lastNotification = visibleNotifications[visibleNotifications.length - 1];
+
+                            return lastNotification ? (
+                                <Notification
+                                    key={lastNotification.id}
+                                    notification={lastNotification}
+                                    onDismiss={notifications.removeNotification}
+                                    showBorder={!notifications.isVisible}
+                                    onFadeIn={notifications.markNotificationFadedIn}
+                                />
+                            ) : null;
+                        })()}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

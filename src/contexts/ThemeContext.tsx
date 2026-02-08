@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { IQuickInputService } from 'monaco-editor/esm/vs/platform/quickinput/common/quickInput';
+import { IQuickInputService } from "monaco-editor/esm/vs/platform/quickinput/common/quickInput";
 import { ThemeLoader, Theme } from "../themeLoader";
 import { gmodInterface } from "../glua/gmodInterface";
 import { useEditor } from "./EditorContext";
