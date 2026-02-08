@@ -12,10 +12,6 @@
         width: 100% !important;
     }
 
-    &:focus {
-        outline-color: transparent;
-    }
-
     >.monaco-notifications-header {
         display: flex;
         align-items: center;

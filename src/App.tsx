@@ -5,6 +5,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { ProblemsProvider } from "./contexts/ProblemsContext";
 import { MonacoEditor } from "./components/MonacoEditor";
 import { NotificationPanel } from "./components/NotificationPanel";
+import { ProblemsPanel } from "./components/ProblemsPanel";
 import { StatusPanel } from "./components/StatusPanel";
 import { setupMonacoLanguage, initializeAutocompletion } from "./services/monacoSetup";
 import { gmodInterface } from "./glua/gmodInterface";
@@ -35,6 +36,7 @@ const App: React.FC = () => {
                         <div style={{ width: "100%", height: "100vh", position: "relative" }}>
                             <MonacoEditor />
                             <NotificationPanel />
+                            <ProblemsPanel />
                             <StatusPanel />
                         </div>
                     </ProblemsProvider>

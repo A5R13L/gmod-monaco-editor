@@ -3,6 +3,10 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface ProblemsContextType {
     problems: monaco.editor.IMarkerData[];
+    isVisible: boolean;
+    show: () => void;
+    hide: () => void;
+    toggle: () => void;
 }
 
 const ProblemsContext = createContext<ProblemsContextType | undefined>(undefined);
@@ -23,6 +27,7 @@ interface ProblemsProviderProps {
 
 export const ProblemsProvider: React.FC<ProblemsProviderProps> = ({ children }) => {
     const [problems, setProblems] = useState<monaco.editor.IMarkerData[]>([]);
+    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
         const onMarkersChange = () => {
@@ -34,10 +39,15 @@ export const ProblemsProvider: React.FC<ProblemsProviderProps> = ({ children }) 
         };
 
         monaco.editor.onDidChangeMarkers(onMarkersChange);
+        onMarkersChange();
     }, []);
 
+    const show = () => setIsVisible(true);
+    const hide = () => setIsVisible(false);
+    const toggle = () => setIsVisible((prev) => !prev);
+
     return (
-        <ProblemsContext.Provider value={{ problems }}>
+        <ProblemsContext.Provider value={{ problems, isVisible, show, hide, toggle }}>
             {children}
         </ProblemsContext.Provider>
     );

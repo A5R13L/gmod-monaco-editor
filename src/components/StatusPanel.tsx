@@ -7,7 +7,7 @@ import "./StatusPanel.scss";
 
 export const StatusPanel: React.FC = () => {
     const { editor } = useEditor();
-    const { problems } = useProblems();
+    const { problems, toggle: toggleProblems } = useProblems();
     const notifications = useNotifications();
     const [cursor, setCursor] = useState<monaco.Position>(new monaco.Position(1, 1));
 
@@ -34,6 +34,7 @@ export const StatusPanel: React.FC = () => {
                 <div className="item left" id="status.problems">
                     <a
                         className="item-label"
+                        onClick={toggleProblems}
                     >
                         <span className="codicon codicon-error" />
                         <span> {problems.filter((problem) => problem.severity === monaco.MarkerSeverity.Error).length} </span>
