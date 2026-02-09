@@ -1,0 +1,172 @@
+.tab-context-menu {
+    background: var(--vscode-menu-background);
+    border: 1px solid var(--vscode-menu-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
+    padding: 4px 0;
+    z-index: 10000;
+    outline: none;
+
+    .tab-context-menu-item {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        cursor: pointer;
+        color: var(--vscode-menu-foreground);
+        font-size: 13px;
+        user-select: none;
+        gap: 8px;
+
+        .codicon {
+            font-size: 16px;
+            width: 16px;
+            text-align: center;
+        }
+
+        &:hover {
+            background: var(--vscode-menu-selectionBackground);
+            color: var(--vscode-menu-selectionForeground);
+        }
+
+        &.has-submenu {
+            justify-content: space-between;
+
+            .codicon-chevron-right {
+                margin-left: auto;
+            }
+        }
+    }
+}
+
+.tab-context-submenu {
+    background: var(--vscode-menu-background);
+    border: 1px solid var(--vscode-menu-border);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    min-width: 250px;
+    max-width: 400px;
+    z-index: 10001;
+    outline: none;
+
+    &.compact {
+        min-width: 200px;
+        max-width: 300px;
+    }
+
+    .tab-context-submenu-header {
+        padding: 8px 12px;
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--vscode-menu-foreground);
+        border-bottom: 1px solid var(--vscode-menu-border);
+    }
+
+    .tab-context-submenu-content {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tab-context-submenu-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        label {
+            font-size: 12px;
+            color: var(--vscode-menu-foreground);
+            font-weight: 500;
+        }
+
+        input,
+        textarea {
+            background: var(--vscode-quickInput-background);
+            border: 1px solid var(--vscode-pickerGroup-border);
+            color: var(--vscode-input-foreground);
+            padding: 6px 8px;
+            border-radius: 2px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+
+            &:focus {
+                border-color: var(--vscode-focusBorder);
+            }
+
+            &::placeholder {
+                color: var(--vscode-input-placeholderForeground);
+            }
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+    }
+
+    .tab-context-submenu-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .tab-context-submenu-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--vscode-menu-foreground);
+        user-select: none;
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--vscode-focusBorder);
+        }
+
+        &:hover {
+            color: var(--vscode-menu-selectionForeground);
+        }
+    }
+
+    .tab-context-submenu-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px solid var(--vscode-menu-border);
+    }
+
+    .tab-context-submenu-button {
+        background: var(--vscode-menu-selectionBackground);
+        color: var(--vscode-menu-selectionForeground);
+        border: none;
+        padding: 6px 16px;
+        border-radius: 2px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+        transition:
+            background 0.1s ease,
+            opacity 0.1s ease;
+
+        &:hover:not(:disabled) {
+            background: var(--vscode-menu-selectionBackground);
+            opacity: 0.9;
+        }
+
+        &:active:not(:disabled) {
+            background: var(--vscode-menu-selectionBackground);
+            opacity: 0.8;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}

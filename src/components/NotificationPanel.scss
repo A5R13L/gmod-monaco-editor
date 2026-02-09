@@ -1,0 +1,100 @@
+#monaco-notifications {
+    position: absolute;
+    z-index: 1000;
+    bottom: 31px;
+    right: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    width: 450px;
+    outline-color: transparent !important;
+
+    @media (max-width: 449.98px) {
+        width: 100% !important;
+    }
+
+    > .monaco-notifications-header {
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+        padding-right: 5px;
+        height: 35px;
+
+        > .monaco-notifications-header-title {
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        > .monaco-notifications-header-toolbar {
+            flex: 1;
+
+            .actions-container {
+                justify-content: flex-end;
+            }
+
+            .action-item {
+                margin-right: 4px;
+
+                &:first-child {
+                    margin-left: 4px;
+                }
+            }
+        }
+    }
+}
+
+.hidden {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+.monaco-notifications-container {
+    &:focus {
+        outline-color: transparent;
+    }
+
+    .monaco-list {
+        will-change: transform;
+        transform: translateZ(0);
+    }
+}
+
+.monaco-notification-content {
+    display: flex;
+    flex-grow: 1;
+}
+
+.monaco-action-bar {
+    white-space: nowrap;
+    height: 100%;
+
+    .actions-container {
+        display: flex;
+        margin: 0 auto;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        align-items: center;
+    }
+}
+
+.action-label:not(.disabled):hover {
+    background: rgba(90, 93, 94, 0.31);
+}
+
+.codicon {
+    &[class*="codicon-"] {
+        font-size: 16px;
+    }
+}
+
+.codicon-color-error {
+    color: #f14c4c;
+}
+
+.codicon-color-warning {
+    color: #cca700;
+}
+
+.codicon-color-info {
+    color: #3794ff;
+}

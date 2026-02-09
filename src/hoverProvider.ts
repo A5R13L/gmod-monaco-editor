@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { autocompletionData } from "./glua/autocompletionData";
 import { GluaItem } from "./glua/luaItem";
 
@@ -6,7 +6,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
     provideHover(
         model: monaco.editor.ITextModel,
         position: monaco.Position,
-        token: monaco.CancellationToken
+        token: monaco.CancellationToken,
     ): monaco.languages.ProviderResult<monaco.languages.Hover> {
         const lineUntil = model
             .getLineContent(position.lineNumber)
@@ -52,7 +52,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
                     position.lineNumber,
                     word.startColumn,
                     position.lineNumber,
-                    word.endColumn
+                    word.endColumn,
                 ),
             };
         }
@@ -64,7 +64,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
                     position.lineNumber,
                     firstIdentifierWord.startColumn,
                     position.lineNumber,
-                    word.endColumn
+                    word.endColumn,
                 ),
             };
 
@@ -76,7 +76,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
                 position.lineNumber,
                 firstIdentifierWord.startColumn,
                 position.lineNumber,
-                word.endColumn
+                word.endColumn,
             ),
         };
     }

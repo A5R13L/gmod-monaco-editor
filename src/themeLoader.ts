@@ -1,9 +1,9 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-export interface Theme {
+export type Theme = {
     id: string;
     name: string;
-}
+};
 
 export class ThemeLoader {
     private loadedThemes: Theme[] = [];
@@ -70,8 +70,8 @@ export class ThemeLoader {
             "upstream_sunburst",
             "vibrant_ink",
             "xcode_default",
-            "zenburnesque"
-          ];
+            "zenburnesque",
+        ];
 
         try {
             for (let themeId of themeList) {
@@ -86,7 +86,9 @@ export class ThemeLoader {
 
                 monaco.editor.defineTheme(themeId, themeData);
             }
-        } catch (err) { console.log(`Failed to load theme: ${err}`); }
+        } catch (err) {
+            console.log(`Failed to load theme: ${err}`);
+        }
     }
 
     getLoadedThemes(): Theme[] {

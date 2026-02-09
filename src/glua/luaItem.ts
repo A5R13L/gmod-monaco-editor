@@ -1,9 +1,10 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export abstract class GluaItem {
-    constructor(jsonObj: object) {
-        // @ts-ignore
-        for (const propName in jsonObj) this[propName] = jsonObj[propName];
+    constructor(jsonObject: object) {
+        for (const propName in jsonObject)
+            this[propName as keyof typeof jsonObject] =
+                jsonObject[propName as keyof typeof jsonObject];
     }
 
     abstract generateDocumentation(): monaco.IMarkdownString[];

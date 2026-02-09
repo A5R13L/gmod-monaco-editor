@@ -1,6 +1,9 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { GLuaFormatter } from "./editorFormatter";
+import { GLuaCompletionProvider } from "../completionProvider";
+import { GLuaHoverProvider } from "../hoverProvider";
 
-export const conf: monaco.languages.LanguageConfiguration = {
+export const configuration: monaco.languages.LanguageConfiguration = {
     comments: {
         lineComment: "--",
         blockComment: ["--[[", "]]"],
@@ -39,7 +42,7 @@ export const conf: monaco.languages.LanguageConfiguration = {
     },
 };
 
-export const language: monaco.languages.IMonarchLanguage = {
+export const tokens: monaco.languages.IMonarchLanguage = {
     defaultToken: "",
     tokenPostfix: ".lua",
 
@@ -173,7 +176,7 @@ export const language: monaco.languages.IMonarchLanguage = {
         ],
 
         comment: [
-            [/\/\*/, "comment", "@push"], // nested comment
+            [/\/\*/, "comment", "@push"],
             [/\*\//, "comment", "@pop"],
             [/[\/*]/, "comment"],
 
@@ -207,3 +210,7 @@ export const language: monaco.languages.IMonarchLanguage = {
         ],
     },
 };
+
+export const formatter = new GLuaFormatter();
+export const completionProvider = new GLuaCompletionProvider();
+export const hoverProvider = new GLuaHoverProvider();

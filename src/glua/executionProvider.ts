@@ -1,7 +1,7 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 export function ImplementExecution() {
-    editor?.addAction({
+    monacoEditor?.addAction({
         id: "editor.command.execute_client",
         label: "Execute: Client",
         keybindings: [
@@ -11,11 +11,11 @@ export function ImplementExecution() {
             ),
         ],
         run: () => {
-            gmodinterface?.OnExecute("client", editor!.getValue());
+            gmodInterface?.OnExecute("client", monacoEditor!.getValue());
         },
     });
 
-    editor?.addAction({
+    monacoEditor?.addAction({
         id: "editor.command.execute_menu",
         label: "Execute: Menu",
         keybindings: [
@@ -25,7 +25,7 @@ export function ImplementExecution() {
             ),
         ],
         run: () => {
-            gmodinterface?.OnExecute("menu", editor!.getValue());
+            gmodInterface?.OnExecute("menu", monacoEditor!.getValue());
         },
     });
 }

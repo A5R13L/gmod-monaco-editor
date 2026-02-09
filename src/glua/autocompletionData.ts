@@ -1,5 +1,5 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { GmodInterfaceValue } from "./gmodInterfaceValue";
+import { GluaInterface } from "./luaInterface";
 import { GluaEnum } from "./luaEnum";
 import { GluaFunc } from "./luaFunc";
 import { GluaItem } from "./luaItem";
@@ -65,7 +65,7 @@ class AutocompletionData {
     functions: GluaFunc[] = [];
     hooks: GluaFunc[] = [];
     modules: string[] = [];
-    interfaceValues: GmodInterfaceValue[] = [];
+    interfaceValues: GluaInterface[] = [];
 
     snippets: {
         name: string;
@@ -103,13 +103,13 @@ class AutocompletionData {
             this.globalCache.push(item);
         });
 
-        autocompletionData.enums.forEach((enumObj: GluaEnum) => {
+        autocompletionData.enums.forEach((enumObject: GluaEnum) => {
             const item = {
-                label: enumObj.key,
+                label: enumObject.key,
                 kind: monaco.languages.CompletionItemKind.Enum,
-                detail: `Value: ${enumObj.value}`,
-                documentation: enumObj.getDetail(),
-                insertText: enumObj.key,
+                detail: `Value: ${enumObject.value}`,
+                documentation: enumObject.getDetail(),
+                insertText: enumObject.key,
                 insertTextRules:
                     monaco.languages.CompletionItemInsertTextRule
                         .KeepWhitespace,
@@ -170,7 +170,7 @@ class AutocompletionData {
         });
 
         autocompletionData.interfaceValues.forEach(
-            (interfaceValue: GmodInterfaceValue) => {
+            (interfaceValue: GluaInterface) => {
                 if (interfaceValue.classFunction) return;
 
                 const item = {
@@ -237,7 +237,7 @@ class AutocompletionData {
         });
 
         autocompletionData.interfaceValues.forEach(
-            (interfaceValue: GmodInterfaceValue) => {
+            (interfaceValue: GluaInterface) => {
                 if (!interfaceValue.classFunction) return;
 
                 const item = {
@@ -310,7 +310,7 @@ class AutocompletionData {
             suggestions: hookSuggestions,
         };
     }
-    AddNewInterfaceValue(val: GmodInterfaceValue) {
+    AddNewInterfaceValue(val: GluaInterface) {
         if (!val.fullname) {
             console.error("Cant add new value without a fullname");
 

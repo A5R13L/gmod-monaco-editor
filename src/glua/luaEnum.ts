@@ -9,8 +9,8 @@ export class GluaEnum extends GluaItem {
     realm!: string;
     realms: string[] | undefined;
 
-    constructor(jsonObj: object) {
-        super(jsonObj);
+    constructor(jsonObject: object) {
+        super(jsonObject);
     }
 
     generateDocumentation(): monaco.IMarkdownString[] {

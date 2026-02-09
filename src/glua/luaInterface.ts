@@ -1,7 +1,7 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { GluaItem } from "./luaItem";
 
-export class GmodInterfaceValue extends GluaItem {
+export class GluaInterface extends GluaItem {
     fullname!: string;
     name!: string;
     classFunction?: boolean;
@@ -9,8 +9,8 @@ export class GmodInterfaceValue extends GluaItem {
     type!: keyof typeof monaco.languages.CompletionItemKind;
     parent?: string;
 
-    constructor(jsonObj: object) {
-        super(jsonObj);
+    constructor(jsonObject: object) {
+        super(jsonObject);
 
         if (!this.name)
             this.name = `${

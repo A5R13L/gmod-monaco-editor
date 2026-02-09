@@ -37,8 +37,8 @@ export class GluaFunc extends GluaItem {
     realms!: string[];
     objType!: string;
 
-    constructor(jsonObj: object) {
-        super(jsonObj);
+    constructor(jsonObject: object) {
+        super(jsonObject);
     }
 
     hasArgs(): boolean {
@@ -146,7 +146,7 @@ export class GluaFunc extends GluaItem {
 
                 result += `### ${argStr}\n##### ${arg.text.replace(
                     "\n",
-                    "\n##### "
+                    "\n##### ",
                 )}\n`;
             });
 

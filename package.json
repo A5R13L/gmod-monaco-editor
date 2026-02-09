@@ -6,31 +6,48 @@
     "scripts": {
         "build": "webpack",
         "watch": "webpack serve --open",
-        "dev": "webpack-dev-server"
+        "dev": "webpack-dev-server",
+        "format": "prettier --write \"src/**/*.{ts,tsx,scss,css,json}\" \"*.{js,json,md}\"",
+        "compile": "tsc --noEmit"
     },
-    "dependencies": {},
     "devDependencies": {
         "@babel/core": "^7.23.9",
         "@babel/preset-env": "^7.23.9",
+        "@babel/preset-react": "^7.23.3",
         "@babel/preset-typescript": "^7.23.3",
+        "@types/axios": "^0.9.36",
+        "@types/events": "^3.0.3",
+        "@types/node": "^25.2.2",
+        "@types/react": "^18.2.0",
+        "@types/react-dom": "^18.2.0",
         "axios": "^1.6.7",
         "babel-loader": "^9.1.3",
+        "clsx": "^2.1.1",
         "css-loader": "^6.10.0",
         "file-loader": "^6.2.0",
         "html-webpack-plugin": "^5.6.0",
         "json-loader": "^0.5.7",
-        "lua-fmt": "^2.6.0",
         "monaco-editor": "^0.46.0",
         "monaco-editor-webpack-plugin": "^7.1.0",
         "path-browserify": "^1.0.1",
         "prettier": "^3.2.5",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "sass": "^1.97.3",
+        "sass-loader": "^16.0.7",
         "speed-measure-webpack-plugin": "^1.5.0",
         "style-loader": "^3.3.4",
+        "tailwind-merge": "^3.4.0",
+        "terser-webpack-plugin": "^5.3.10",
         "ts-loader": "^9.5.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.3.3",
         "webpack": "^5.90.1",
         "webpack-cli": "^5.1.4",
         "webpack-dev-server": "^5.0.1"
+    },
+    "dependencies": {
+        "commander": "^14.0.3",
+        "lua-fmt": "^2.6.0"
     }
 }

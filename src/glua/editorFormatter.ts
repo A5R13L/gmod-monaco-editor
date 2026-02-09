@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { formatText } from "lua-fmt";
 
 export class GLuaFormatter
@@ -9,7 +9,7 @@ export class GLuaFormatter
     provideDocumentFormattingEdits(
         model: monaco.editor.ITextModel,
         options: monaco.languages.FormattingOptions,
-        token: monaco.CancellationToken
+        _: monaco.CancellationToken,
     ): monaco.languages.ProviderResult<monaco.languages.TextEdit[]> {
         let code: string = model.getValue();
 
