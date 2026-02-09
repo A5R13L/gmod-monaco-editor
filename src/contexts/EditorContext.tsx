@@ -10,6 +10,7 @@ import { gmodInterface } from "../glua/gmodInterface";
 import {
     setupExecutionActions,
     setupSuggestionFix,
+    setupTabActions,
 } from "../services/editorActions";
 
 type EditorContextType = {
@@ -96,6 +97,7 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
 
         setupExecutionActions(monacoEditor);
         setupSuggestionFix(monacoEditor);
+        setupTabActions(monacoEditor);
         gmodInterface?.SetEditor(monacoEditor);
 
         (

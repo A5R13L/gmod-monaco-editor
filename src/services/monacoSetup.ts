@@ -2,7 +2,7 @@ import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import * as lua from "../glua/luaLanguage";
 import { LoadAutocompletionData } from "../glua/wikiScraper";
 
-export function setupMonacoLanguage(): void {
+export function setupMonacoLanguage() {
     monaco.languages.register({
         id: "glua",
         extensions: [".lua"],

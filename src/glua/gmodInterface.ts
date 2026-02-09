@@ -3,586 +3,670 @@ import { GluaInterface } from "./luaInterface";
 import { EditorSession } from "./editorSession";
 import { autocompletionData, ResetAutocomplete } from "./autocompletionData";
 import {
-    LoadAutocompletionData,
-    AddCustomData,
-    WikiScraperData,
+	LoadAutocompletionData,
+	AddCustomData,
+	WikiScraperData,
 } from "./wikiScraper";
 import axios from "axios";
 
 import {
-    ClientAutocompleteData,
-    EditorAction,
-    ExtendedGmodInterface,
-    LuaReport,
-    SerializedEditorSession,
-    SessionPublishData,
-    Snippet,
+	ClientAutocompleteData,
+	EditorAction,
+	ExtendedGmodInterface,
+	LuaReport,
+	SerializedEditorSession,
+	SessionPublishData,
+	Snippet,
 } from "./types/definitions";
 
 export const editorSessions: Map<string, EditorSession> = new Map();
 export var gmodInterface: ExtendedGmodInterface | undefined;
 export var currentEditorSession: EditorSession | undefined;
+export var lastEditorSession: EditorSession | undefined;
+export var closedSessions: Partial<SerializedEditorSession>[] = [];
 
 const request = axios.create({});
 
 const interfaceLogger = (name: string) => {
-    return (...args: unknown[]) => {
-        console.log(
-            `%cGMod Interface%c${name}`,
-            "background-color: rgb(30, 100, 255); color: white; padding: 2px 4px; border-radius: 4px; margin-right: 5px;",
-            "background-color: rgb(200, 150, 200); color: white; padding: 2px 4px; border-radius: 4px;",
-            ...args,
-        );
-    };
+	return (...args: unknown[]) => {
+		console.log(
+			`%cGMod Interface%c${name}`,
+			"background-color: rgb(30, 100, 255); color: white; padding: 2px 4px; border-radius: 4px; margin-right: 5px;",
+			"background-color: rgb(200, 150, 200); color: white; padding: 2px 4px; border-radius: 4px;",
+			...args,
+		);
+	};
+};
+
+const debounceTimers = new Map<Symbol, NodeJS.Timeout>();
+
+const debounce = <T extends unknown[]>(func: (...args: T) => void, wait: number) => {
+	let symbol = Symbol.for(func.name);
+	let timeout: NodeJS.Timeout | undefined = debounceTimers.get(symbol);
+
+	return (...args: T) => {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
+
+		timeout = setTimeout(() => func(...args), wait);
+		debounceTimers.set(symbol, timeout);
+	};
 };
 
 if (!globalThis.gmodInterface) {
-    console.log(
-        "%cGMod Interface",
-        "background-color: rgb(204, 160, 0); color: white; padding: 2px 4px; border-radius: 4px;",
-        "Browser context detected, limited functionality will be available.",
-    );
+	console.log(
+		"%cGMod Interface",
+		"background-color: rgb(204, 160, 0); color: white; padding: 2px 4px; border-radius: 4px;",
+		"Browser context detected, limited functionality will be available.",
+	);
 
-    globalThis.gmodInterface = {
-        OnReady: interfaceLogger("OnReady"),
-        OnCode: interfaceLogger("OnCode"),
-        OpenURL: interfaceLogger("OpenURL"),
-        OnThemeChanged: interfaceLogger("OnThemeChanged"),
-        OnSessionFocus: interfaceLogger("OnSessionFocus"),
-        OnSessionUpdate: interfaceLogger("OnSessionUpdate"),
-        OnSessionExported: interfaceLogger("OnSessionExported"),
-        OnSessionImported: interfaceLogger("OnSessionImported"),
-        OnSessionPublished: interfaceLogger("OnSessionPublished"),
-        OnAction: interfaceLogger("OnAction"),
-        OnExecute: interfaceLogger("OnExecute"),
-    };
+	globalThis.gmodInterface = {
+		OnReady: interfaceLogger("OnReady"),
+		OnCode: interfaceLogger("OnCode"),
+		OpenURL: interfaceLogger("OpenURL"),
+		OnThemeChanged: interfaceLogger("OnThemeChanged"),
+		OnSessionFocus: interfaceLogger("OnSessionFocus"),
+		OnSessionUpdate: interfaceLogger("OnSessionUpdate"),
+		OnSessionExported: interfaceLogger("OnSessionExported"),
+		OnSessionImported: interfaceLogger("OnSessionImported"),
+		OnSessionPublished: interfaceLogger("OnSessionPublished"),
+		OnAction: interfaceLogger("OnAction"),
+		OnExecute: interfaceLogger("OnExecute"),
+	};
 }
 
 if (globalThis.gmodInterface) {
-    gmodInterface = {
-        editor: globalThis.monacoEditor,
-        ...globalThis.gmodInterface,
-
-        SetEditor(editor: monaco.editor.IStandaloneCodeEditor): void {
-            this.editor = editor;
-
-            globalThis.monacoEditor = editor;
-
-            editor.onDidChangeModelContent(() => {
-                const model = editor.getModel();
-                if (!model) return;
-
-                const code = model.getValue();
-                const versionId = model.getAlternativeVersionId();
-
-                this.OnCode(code, versionId);
-
-                for (const session of editorSessions.values()) {
-                    if (session.model === model) {
-                        session.code = code;
-                        session.versionId = versionId;
-                        break;
-                    }
-                }
-
-                setTimeout(() => {
-                    this.OnSessionUpdate(this.GetSessions());
-                }, 0);
-            });
-
-            const linkDetector = editor.getContribution("editor.linkDetector");
-            if (!linkDetector) return;
-
-            // @ts-ignore
-            linkDetector.openerService.open = (url: string) => {
-                this.OpenURL(url);
-            };
-        },
-
-        SetCode(code: string, keepViewState: boolean = false): void {
-            let viewState: monaco.editor.ICodeEditorViewState;
-
-            if (keepViewState) viewState = this.editor.saveViewState()!;
-
-            this.editor.setValue(code);
-
-            if (keepViewState) this.editor.restoreViewState(viewState!);
-        },
-
-        SetTheme(themeName: string): void {
-            monaco.editor.setTheme(themeName);
-        },
-
-        SetLanguage(langId: string): void {
-            monaco.editor.setModelLanguage(this.editor.getModel()!, langId);
-        },
-
-        GotoLine(lineNumber: number): void {
-            const position = {
-                lineNumber,
-                column: 1,
-            };
-
-            this.editor.setPosition(position);
-
-            this.editor.revealPositionInCenterIfOutsideViewport(
-                position,
-                monaco.editor.ScrollType.Smooth,
-            );
-        },
-
-        SubmitLuaReport(report: LuaReport): void {
-            let markers: monaco.editor.IMarkerData[] = report.events.map(
-                (e) => {
-                    return {
-                        message: e.message,
-                        endColumn: e.endColumn,
-                        startColumn: e.startColumn,
-                        startLineNumber: e.line,
-                        endLineNumber: e.line,
-                        severity: e.isError
-                            ? monaco.MarkerSeverity.Error
-                            : monaco.MarkerSeverity.Warning,
-                    };
-                },
-            );
-
-            monaco.editor.setModelMarkers(
-                this.editor.getModel()!,
-                "luacheck",
-                markers,
-            );
-        },
-
-        RenameSession(newName: string, oldName?: string) {
-            if (
-                !currentEditorSession ||
-                (oldName && !editorSessions.has(oldName))
-            ) {
-                console.error("Cant find session to rename");
+	gmodInterface = {
+		tabBarVisible: true,
+		overrideTabBarCommands: false,
+		editor: globalThis.monacoEditor,
+		...globalThis.gmodInterface,
+
+		SetEditor(editor: monaco.editor.IStandaloneCodeEditor) {
+			this.editor = editor;
+
+			globalThis.monacoEditor = editor;
+
+			editor.onDidChangeModelContent(() => {
+				const model = editor.getModel();
+				if (!model) return;
+
+				const code = model.getValue();
+				const versionId = model.getAlternativeVersionId();
+
+				this.OnCode(code, versionId);
+
+				for (const session of editorSessions.values()) {
+					if (session.model === model) {
+						session.code = code;
+						session.versionId = versionId;
+						break;
+					}
+				}
+
+				this.SubmitSessionUpdate();
+			});
+
+			const linkDetector = editor.getContribution("editor.linkDetector");
+			if (!linkDetector) return;
+
+			// @ts-ignore
+			linkDetector.openerService.open = (url: string) => {
+				this.OpenURL(url);
+			};
+		},
+
+		SetCode(code: string, keepViewState: boolean = false) {
+			let viewState: monaco.editor.ICodeEditorViewState;
+
+			if (keepViewState) viewState = this.editor.saveViewState()!;
+
+			this.editor.setValue(code);
+
+			if (keepViewState) this.editor.restoreViewState(viewState!);
+		},
+
+		SetTheme(themeName: string) {
+			monaco.editor.setTheme(themeName);
+		},
+
+		SetLanguage(langId: string) {
+			monaco.editor.setModelLanguage(this.editor.getModel()!, langId);
+		},
+
+		GotoLine(lineNumber: number) {
+			const position = {
+				lineNumber,
+				column: 1,
+			};
+
+			this.editor.setPosition(position);
+
+			this.editor.revealPositionInCenterIfOutsideViewport(
+				position,
+				monaco.editor.ScrollType.Smooth,
+			);
+		},
+
+		SubmitLuaReport(report: LuaReport) {
+			let markers: monaco.editor.IMarkerData[] = report.events.map(
+				(e) => {
+					return {
+						message: e.message,
+						endColumn: e.endColumn,
+						startColumn: e.startColumn,
+						startLineNumber: e.line,
+						endLineNumber: e.line,
+						severity: e.isError
+							? monaco.MarkerSeverity.Error
+							: monaco.MarkerSeverity.Warning,
+					};
+				},
+			);
+
+			monaco.editor.setModelMarkers(
+				this.editor.getModel()!,
+				"luacheck",
+				markers,
+			);
+		},
+
+		GetNextSessionName(): string {
+			let counter = 1;
+			let sessionName = "";
+
+			do {
+				sessionName = `Tab #${counter}`;
+				counter++;
+			} while (editorSessions.has(sessionName));
 
-                return;
-            }
+			return sessionName;
+		},
 
-            if (editorSessions.has(newName)) {
-                console.error("Cant rename session, name already taken");
+		GetSessions(): Partial<SerializedEditorSession>[] {
+			const serializableSessions: Partial<SerializedEditorSession>[] = [];
 
-                return;
-            }
-            const newSession = oldName
-                ? editorSessions.get(oldName)
-                : currentEditorSession;
+			editorSessions.forEach((newSession: EditorSession) => {
+				serializableSessions.push(newSession.serialize());
+			});
 
-            if (!newSession) return;
+			return serializableSessions;
+		},
 
-            editorSessions.delete(newSession.name);
+		CreateSession(
+			newSessionObject: Partial<SerializedEditorSession>,
+		): EditorSession | undefined {
+			if (!newSessionObject.name || newSessionObject.name.trim() === "")
+				newSessionObject.name = this.GetNextSessionName();
 
-            newSession.name = newName;
+			const existingSession = editorSessions.get(newSessionObject.name);
 
-            editorSessions.set(newName, newSession!);
+			if (existingSession) {
+				if (newSessionObject.code) {
+					existingSession.code = newSessionObject.code;
 
-            if (newSession === currentEditorSession) {
-                this.OnSessionFocus(newSession.serialize());
-            }
+					existingSession.model.setValue(newSessionObject.code);
+				}
 
-            this.OnSessionUpdate(this.GetSessions());
-        },
-        SetActiveSession(name: string) {
-            const session = editorSessions.get(name);
+				if (newSessionObject.language) {
+					existingSession.language = newSessionObject.language;
 
-            if (!session) {
-                console.error(`Cant find session named ${name}`);
+					monaco.editor.setModelLanguage(
+						existingSession.model,
+						newSessionObject.language,
+					);
+				}
 
-                return;
-            }
+				if (newSessionObject.viewState) {
+					existingSession.viewState = newSessionObject.viewState;
 
-            if (currentEditorSession && currentEditorSession.name === name) {
-                return;
-            }
+					if (existingSession.isFocused) {
+						this.editor.restoreViewState(
+							newSessionObject.viewState,
+						);
+					}
+				}
 
-            if (currentEditorSession) {
-                const viewState = this.editor.saveViewState();
+				if (!existingSession.isFocused) {
+					this.SubmitSessionUpdate();
+				}
 
-                currentEditorSession.isFocused = false;
-                currentEditorSession.viewState = viewState!;
-            }
+				return existingSession;
+			}
 
-            this.editor.setModel(session.model);
-            monaco.editor.setModelMarkers(session.model, "luacheck", []);
+			const newSession = EditorSession.fromObject(newSessionObject);
 
-            if (session.viewState)
-                this.editor.restoreViewState(session.viewState);
+			editorSessions.set(newSession.name, newSession);
 
-            session.isFocused = true;
-            currentEditorSession = session;
+			if (newSession.isFocused) {
+				this.SetActiveSession(newSession.name);
+			}
 
-            this.OnSessionFocus(session.serialize());
-            this.OnSessionUpdate(this.GetSessions());
-        },
+			this.SubmitSessionUpdate();
 
-        CloseSessions(): void {
-            editorSessions.forEach((newSession: EditorSession) => {
-                newSession.model.dispose();
-            });
+			return newSession;
+		},
 
-            editorSessions.clear();
-            currentEditorSession = undefined;
-            this.OnSessionUpdate(this.GetSessions());
-        },
+		CreateNewSession() {
+			this.CreateSession({ code: "", isFocused: true });
+		},
 
-        GetNextSessionName(): string {
-            let counter = 1;
-            let sessionName = "";
+		SetActiveSession(name: string) {
+			const session = editorSessions.get(name);
 
-            do {
-                sessionName = `Tab #${counter}`;
-                counter++;
-            } while (editorSessions.has(sessionName));
+			if (!session) {
+				console.error(`Cant find session named ${name}`);
 
-            return sessionName;
-        },
+				return;
+			}
 
-        ReorderSessions(sessionNames: string[]): void {
-            const reorderedSessions = new Map<string, EditorSession>();
+			if (currentEditorSession && currentEditorSession.name === name) {
+				return;
+			}
 
-            sessionNames.forEach((name) => {
-                const newSession = editorSessions.get(name);
-                if (newSession) {
-                    reorderedSessions.set(name, newSession);
-                }
-            });
+			if (currentEditorSession) {
+				const viewState = this.editor.saveViewState();
 
-            editorSessions.forEach((newSession, name) => {
-                if (!reorderedSessions.has(name)) {
-                    reorderedSessions.set(name, newSession);
-                }
-            });
+				currentEditorSession.isFocused = false;
+				currentEditorSession.viewState = viewState!;
+				lastEditorSession = currentEditorSession;
+			}
 
-            editorSessions.clear();
+			this.editor.setModel(session.model);
+			monaco.editor.setModelMarkers(session.model, "luacheck", []);
 
-            reorderedSessions.forEach((newSession, name) => {
-                editorSessions.set(name, newSession);
-            });
+			if (session.viewState)
+				this.editor.restoreViewState(session.viewState);
 
-            this.OnSessionUpdate(this.GetSessions());
-        },
+			session.isFocused = true;
+			currentEditorSession = session;
 
-        CreateSession(
-            newSessionObject: Partial<SerializedEditorSession>,
-        ): EditorSession | undefined {
-            if (!newSessionObject.name || newSessionObject.name.trim() === "")
-                newSessionObject.name = this.GetNextSessionName();
+			this.OnSessionFocus(session.serialize());
+			this.SubmitSessionUpdate();
+		},
 
-            interfaceLogger("CreateSession")(
-                `Name: ${newSessionObject.name} | Code: ${newSessionObject.code} | Focused: ${newSessionObject.isFocused}`,
-            );
+		SwitchToLastSession() {
+			if (
+				lastEditorSession &&
+				editorSessions.has(lastEditorSession.name)
+			) {
+				this.SetActiveSession(lastEditorSession.name);
+			}
+		},
 
-            const existingSession = editorSessions.get(newSessionObject.name);
+		ReopenLastClosedSession() {
+			if (closedSessions.length === 0) return;
 
-            if (existingSession) {
-                if (newSessionObject.code) {
-                    existingSession.code = newSessionObject.code;
+			const lastClosed = closedSessions.pop()!;
 
-                    existingSession.model.setValue(newSessionObject.code);
-                }
+			if (lastClosed.name && editorSessions.has(lastClosed.name)) {
+				lastClosed.name = this.GetNextSessionName();
+			}
 
-                if (newSessionObject.language) {
-                    existingSession.language = newSessionObject.language;
+			this.CreateSession({
+				...lastClosed,
+				isFocused: true,
+			});
+		},
 
-                    monaco.editor.setModelLanguage(
-                        existingSession.model,
-                        newSessionObject.language,
-                    );
-                }
+		RenameSession(newName: string, oldName?: string) {
+			if (
+				!currentEditorSession ||
+				(oldName && !editorSessions.has(oldName))
+			) {
+				console.error("Cant find session to rename");
 
-                if (newSessionObject.viewState) {
-                    existingSession.viewState = newSessionObject.viewState;
+				return;
+			}
 
-                    if (existingSession.isFocused) {
-                        this.editor.restoreViewState(
-                            newSessionObject.viewState,
-                        );
-                    }
-                }
+			if (editorSessions.has(newName)) {
+				console.error("Cant rename session, name already taken");
 
-                if (!existingSession.isFocused) {
-                    this.OnSessionUpdate(this.GetSessions());
-                }
+				return;
+			}
+			const newSession = oldName
+				? editorSessions.get(oldName)
+				: currentEditorSession;
 
-                return existingSession;
-            }
+			if (!newSession) return;
 
-            const newSession = EditorSession.fromObject(newSessionObject);
+			editorSessions.delete(newSession.name);
 
-            editorSessions.set(newSession.name, newSession);
+			newSession.name = newName;
 
-            if (newSession.isFocused) {
-                this.SetActiveSession(newSession.name);
-            }
+			editorSessions.set(newName, newSession!);
 
-            this.OnSessionUpdate(this.GetSessions());
+			if (newSession === currentEditorSession) {
+				this.OnSessionFocus(newSession.serialize());
+			}
 
-            return newSession;
-        },
+			this.SubmitSessionUpdate();
+		},
 
-        CloseSession(sessionName?: string, switchTo?: string): void {
-            if (sessionName && !editorSessions.has(sessionName)) {
-                console.error(
-                    `Cant close session named ${sessionName}, it does not exist`,
-                );
+		SetSessionCode(sessionName: string, code: string) {
+			const session = editorSessions.get(sessionName);
 
-                return;
-            }
+			if (!session) {
+				console.error(
+					`Cant set code for session named ${sessionName}, it does not exist`,
+				);
 
-            const session = sessionName
-                ? editorSessions.get(sessionName)!
-                : currentEditorSession!;
+				return;
+			}
 
-            editorSessions.delete(session.name);
+			session.code = code;
 
-            if (session.name === currentEditorSession?.name) {
-                currentEditorSession = undefined;
+			session.model.setValue(code);
+			this.SubmitSessionUpdate();
+		},
 
-                if (switchTo) this.SetActiveSession(switchTo);
+		SetPublishData(data: Partial<SessionPublishData>) {
+			if (!currentEditorSession) {
+				console.error("No current newSession to set publish data on");
+				return;
+			}
 
-                if (!currentEditorSession) {
-                    const sessionKeys = Array.from(editorSessions.keys());
+			if (!currentEditorSession.publishData) {
+				currentEditorSession.publishData = {};
+			}
 
-                    if (sessionKeys.length > 0) {
-                        this.SetActiveSession(
-                            sessionKeys[sessionKeys.length - 1],
-                        );
-                    } else {
-                        this.CreateSession({ code: "", isFocused: true });
-                    }
-                }
-            } else this.OnSessionUpdate(this.GetSessions());
+			Object.assign(currentEditorSession.publishData, data);
+		},
 
-            session.model.dispose();
-        },
+		CloseSession(sessionName?: string, switchTo?: string) {
+			if (sessionName && !editorSessions.has(sessionName)) {
+				console.error(
+					`Cant close session named ${sessionName}, it does not exist`,
+				);
 
-        SetSessionCode(sessionName: string, code: string): void {
-            const session = editorSessions.get(sessionName);
+				return;
+			}
 
-            if (!session) {
-                console.error(
-                    `Cant set code for session named ${sessionName}, it does not exist`,
-                );
+			const session = sessionName
+				? editorSessions.get(sessionName)!
+				: currentEditorSession!;
 
-                return;
-            }
+			const serializedSession = session.serialize();
+			closedSessions.push(serializedSession);
 
-            session.code = code;
+			if (closedSessions.length > 10) {
+				closedSessions.shift();
+			}
 
-            session.model.setValue(code);
-            this.OnSessionUpdate(this.GetSessions());
-        },
+			editorSessions.delete(session.name);
 
-        AddAutocompleteValue(value: object): void {
-            autocompletionData.AddNewInterfaceValue(new GluaInterface(value));
-        },
+			if (lastEditorSession && lastEditorSession.name === session.name) {
+				lastEditorSession = undefined;
+			}
 
-        AddAutocompleteValues(valuesArray: object[]): void {
-            valuesArray.forEach((val: object) => {
-                autocompletionData.AddNewInterfaceValue(new GluaInterface(val));
-            });
-        },
+			if (session.name === currentEditorSession?.name) {
+				currentEditorSession = undefined;
 
-        LoadAutocomplete(clData: ClientAutocompleteData): void {
-            autocompletionData.interfaceValues = [];
+				if (switchTo) this.SetActiveSession(switchTo);
 
-            autocompletionData.GenerateMethodsCache();
-            autocompletionData.GenerateGlobalCache();
-
-            const values = clData.values.split("|");
-            const funcs = clData.funcs.split("|");
-            const tables: string[] = [];
-
-            values.forEach((value: string) => {
-                let name = value;
-
-                if (value.indexOf(".") !== -1) {
-                    const split = value.split(".");
-
-                    name = split.pop()!;
-
-                    const tableName = split.join(".");
-
-                    if (tables.indexOf(tableName) === -1)
-                        tables.push(tableName);
-                }
-
-                if (!autocompletionData.valuesLookup.has(value))
-                    autocompletionData.AddNewInterfaceValue(
-                        new GluaInterface({
-                            name,
-                            fullname: value,
-                        }),
-                    );
-            });
-
-            funcs.forEach((func: string) => {
-                let name = func;
-                let classFunction = false;
-                let type = "Function";
-                let parent = undefined;
-
-                if (func.indexOf(".") !== -1) {
-                    const split = func.split(".");
-
-                    name = split.pop()!;
-
-                    const tableName = split.join(".");
-
-                    if (tables.indexOf(tableName) === -1)
-                        tables.push(tableName);
-                } else if (func.indexOf(":") !== -1) {
-                    const split = func.split(":");
-
-                    parent = split[1];
-                    name = split.pop()!;
-                    classFunction = true;
-                    type = "Method";
-                }
-
-                if (classFunction) {
-                    if (autocompletionData.methodsLookup.has(name)) {
-                        let found = false;
-
-                        autocompletionData.methodsLookup
-                            .get(name)
-                            ?.forEach((method) => {
-                                if (method.getFullName() == func) {
-                                    found = true;
-                                }
-                            });
-
-                        if (found) return;
-                    }
-
-                    autocompletionData.AddNewInterfaceValue(
-                        new GluaInterface({
-                            name,
-                            parent,
-                            fullname: func,
-                            classFunction,
-                            type,
-                        }),
-                    );
-                } else if (!autocompletionData.valuesLookup.has(func))
-                    autocompletionData.AddNewInterfaceValue(
-                        new GluaInterface({
-                            name,
-                            parent,
-                            fullname: func,
-                            classFunction,
-                            type,
-                        }),
-                    );
-            });
-
-            tables.forEach((table) => {
-                if (autocompletionData.modules.indexOf(table) === -1)
-                    autocompletionData.modules.push(table);
-            });
-
-            autocompletionData.ClearAutocompleteCache();
-        },
-
-        AddSnippet(name: string, code: string): void {
-            autocompletionData.snippets.push({
-                name,
-                code,
-            });
-
-            autocompletionData.ClearGlobalAutocompletionCache();
-        },
-
-        LoadSnippets(snippets: Snippet[]): void {
-            snippets.forEach((snippet: Snippet) => {
-                autocompletionData.snippets.push({
-                    name: snippet.name,
-                    code: snippet.code,
-                });
-            });
-
-            autocompletionData.ClearGlobalAutocompletionCache();
-        },
-
-        AddAction(action: EditorAction): void {
-            const newAction: monaco.editor.IActionDescriptor = {
-                id: action.id,
-                label: action.label,
-                contextMenuGroupId: action.contextMenuGroup,
-                keybindings: [],
-                run: () => {
-                    this.OnAction(action.id);
-                },
-            };
-
-            if (action.keyBindings)
-                action.keyBindings.forEach((object: string) => {
-                    object = object.replace(/Mod\./g, "monaco.KeyMod.");
-                    object = object.replace(/Key\./g, "monaco.KeyCode.");
-
-                    newAction.keybindings!.push(eval(object));
-                });
-
-            this.editor.addAction(newAction);
-        },
-
-        LoadAutocompleteState(state: string): Promise<void> {
-            return new Promise<void>((resolve) => {
-                LoadAutocompletionData(state).then(() => {
-                    autocompletionData.ClearAutocompleteCache();
-                    resolve();
-                });
-            });
-        },
-
-        async ExtendAutocompleteWithURL(url: string): Promise<void> {
-            try {
-                AddCustomData(
-                    (await request.get(url)).data as WikiScraperData[],
-                );
-            } catch (Error) {}
-        },
-
-        ResetAutocompletion(): void {
-            ResetAutocomplete();
-        },
-
-        GetSessions(): Partial<SerializedEditorSession>[] {
-            const serializableSessions: Partial<SerializedEditorSession>[] = [];
-
-            editorSessions.forEach((newSession: EditorSession) => {
-                serializableSessions.push(newSession.serialize());
-            });
-
-            return serializableSessions;
-        },
-
-        SetPublishData(data: Partial<SessionPublishData>): void {
-            if (!currentEditorSession) {
-                console.error("No current newSession to set publish data on");
-                return;
-            }
-
-            if (!currentEditorSession.publishData) {
-                currentEditorSession.publishData = {};
-            }
-
-            Object.assign(currentEditorSession.publishData, data);
-        },
-
-        SetTabBarVisible(visible: boolean): void {
-            const event = new CustomEvent("monaco-tabs.visibility", {
-                detail: { visible },
-            });
-
-            window.dispatchEvent(event);
-        },
-    };
-
-    globalThis.gmodInterface = gmodInterface;
+				if (!currentEditorSession) {
+					const sessionKeys = Array.from(editorSessions.keys());
+
+					if (sessionKeys.length > 0) {
+						this.SetActiveSession(
+							sessionKeys[sessionKeys.length - 1],
+						);
+					} else {
+						this.CreateSession({ code: "", isFocused: true });
+					}
+				}
+			} else this.SubmitSessionUpdate();
+
+			session.model.dispose();
+		},
+
+		CloseCurrentSession() {
+			if (!currentEditorSession) return;
+
+			const sessionIndex = Array.from(editorSessions.keys()).indexOf(
+				currentEditorSession.name,
+			);
+			const sessionKeys = Array.from(editorSessions.keys());
+			let nextSession: string | undefined;
+
+			if (sessionKeys.length > 1) {
+				if (sessionIndex > 0) {
+					nextSession = sessionKeys[sessionIndex - 1];
+				} else if (sessionIndex < sessionKeys.length - 1) {
+					nextSession = sessionKeys[sessionIndex + 1];
+				}
+			}
+
+			this.CloseSession(currentEditorSession.name, nextSession);
+		},
+
+		CloseSessions() {
+			editorSessions.forEach((newSession: EditorSession) => {
+				newSession.model.dispose();
+			});
+
+			editorSessions.clear();
+			currentEditorSession = undefined;
+			this.SubmitSessionUpdate();
+		},
+
+		ReorderSessions(sessionNames: string[]) {
+			const reorderedSessions = new Map<string, EditorSession>();
+
+			sessionNames.forEach((name) => {
+				const newSession = editorSessions.get(name);
+				if (newSession) {
+					reorderedSessions.set(name, newSession);
+				}
+			});
+
+			editorSessions.forEach((newSession, name) => {
+				if (!reorderedSessions.has(name)) {
+					reorderedSessions.set(name, newSession);
+				}
+			});
+
+			editorSessions.clear();
+
+			reorderedSessions.forEach((newSession, name) => {
+				editorSessions.set(name, newSession);
+			});
+
+			this.SubmitSessionUpdate();
+		},
+
+		SubmitSessionUpdate() {
+			const sessions = this.GetSessions();
+
+			debounce(this.OnSessionUpdate, 10)(sessions);
+		},
+
+		SetTabBarVisible(visible: boolean, allowCommands?: boolean) {
+			this.tabBarVisible = visible;
+			this.overrideTabBarCommands = allowCommands ?? false;
+
+			const event = new CustomEvent("monaco-tabs.visibility", {
+				detail: { visible },
+			});
+
+			window.dispatchEvent(event);
+		},
+
+		AddAutocompleteValue(value: object) {
+			autocompletionData.AddNewInterfaceValue(new GluaInterface(value));
+		},
+
+		AddAutocompleteValues(valuesArray: object[]) {
+			valuesArray.forEach((val: object) => {
+				autocompletionData.AddNewInterfaceValue(new GluaInterface(val));
+			});
+		},
+
+		LoadAutocomplete(clData: ClientAutocompleteData) {
+			autocompletionData.interfaceValues = [];
+
+			autocompletionData.GenerateMethodsCache();
+			autocompletionData.GenerateGlobalCache();
+
+			const values = clData.values.split("|");
+			const funcs = clData.funcs.split("|");
+			const tables: string[] = [];
+
+			values.forEach((value: string) => {
+				let name = value;
+
+				if (value.indexOf(".") !== -1) {
+					const split = value.split(".");
+
+					name = split.pop()!;
+
+					const tableName = split.join(".");
+
+					if (tables.indexOf(tableName) === -1)
+						tables.push(tableName);
+				}
+
+				if (!autocompletionData.valuesLookup.has(value))
+					autocompletionData.AddNewInterfaceValue(
+						new GluaInterface({
+							name,
+							fullname: value,
+						}),
+					);
+			});
+
+			funcs.forEach((func: string) => {
+				let name = func;
+				let classFunction = false;
+				let type = "Function";
+				let parent = undefined;
+
+				if (func.indexOf(".") !== -1) {
+					const split = func.split(".");
+
+					name = split.pop()!;
+
+					const tableName = split.join(".");
+
+					if (tables.indexOf(tableName) === -1)
+						tables.push(tableName);
+				} else if (func.indexOf(":") !== -1) {
+					const split = func.split(":");
+
+					parent = split[1];
+					name = split.pop()!;
+					classFunction = true;
+					type = "Method";
+				}
+
+				if (classFunction) {
+					if (autocompletionData.methodsLookup.has(name)) {
+						let found = false;
+
+						autocompletionData.methodsLookup
+							.get(name)
+							?.forEach((method) => {
+								if (method.getFullName() == func) {
+									found = true;
+								}
+							});
+
+						if (found) return;
+					}
+
+					autocompletionData.AddNewInterfaceValue(
+						new GluaInterface({
+							name,
+							parent,
+							fullname: func,
+							classFunction,
+							type,
+						}),
+					);
+				} else if (!autocompletionData.valuesLookup.has(func))
+					autocompletionData.AddNewInterfaceValue(
+						new GluaInterface({
+							name,
+							parent,
+							fullname: func,
+							classFunction,
+							type,
+						}),
+					);
+			});
+
+			tables.forEach((table) => {
+				if (autocompletionData.modules.indexOf(table) === -1)
+					autocompletionData.modules.push(table);
+			});
+
+			autocompletionData.ClearAutocompleteCache();
+		},
+
+		LoadAutocompleteState(state: string): Promise<void> {
+			return new Promise<void>((resolve) => {
+				LoadAutocompletionData(state).then(() => {
+					autocompletionData.ClearAutocompleteCache();
+					resolve();
+				});
+			});
+		},
+
+		async ExtendAutocompleteWithURL(url: string): Promise<void> {
+			try {
+				AddCustomData(
+					(await request.get(url)).data as WikiScraperData[],
+				);
+			} catch (Error) { }
+		},
+
+		ResetAutocompletion() {
+			ResetAutocomplete();
+		},
+
+		AddSnippet(name: string, code: string) {
+			autocompletionData.snippets.push({
+				name,
+				code,
+			});
+
+			autocompletionData.ClearGlobalAutocompletionCache();
+		},
+
+		LoadSnippets(snippets: Snippet[]) {
+			snippets.forEach((snippet: Snippet) => {
+				autocompletionData.snippets.push({
+					name: snippet.name,
+					code: snippet.code,
+				});
+			});
+
+			autocompletionData.ClearGlobalAutocompletionCache();
+		},
+
+		AddAction(action: EditorAction) {
+			const newAction: monaco.editor.IActionDescriptor = {
+				id: action.id,
+				label: action.label,
+				contextMenuGroupId: action.contextMenuGroup,
+				keybindings: [],
+				run: () => {
+					this.OnAction(action.id);
+				},
+			};
+
+			if (action.keyBindings)
+				action.keyBindings.forEach((object: string) => {
+					object = object.replace(/Mod\./g, "monaco.KeyMod.");
+					object = object.replace(/Key\./g, "monaco.KeyCode.");
+
+					newAction.keybindings!.push(eval(object));
+				});
+
+			this.editor.addAction(newAction);
+		},
+	};
+
+	globalThis.gmodInterface = gmodInterface;
 }
