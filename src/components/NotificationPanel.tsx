@@ -31,13 +31,21 @@ export const NotificationPanel: React.FC = () => {
 
     return (
         <div
+            id="monaco-notifications"
+            className="monaco-editor"
             ref={containerRef}
-            className="monaco-notifications monaco-editor"
             style={{
-                boxShadow: notifications.isVisible ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px" : undefined
+                boxShadow: notifications.isVisible
+                    ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px"
+                    : undefined,
             }}
         >
-            <div className={cn("monaco-notifications-header", !notifications.isVisible && "hidden")}>
+            <div
+                className={cn(
+                    "monaco-notifications-header",
+                    !notifications.isVisible && "hidden",
+                )}
+            >
                 <span className="monaco-notifications-header-title">
                     {notifications.hasNotifications
                         ? `Notifications (${notifications.notifications.length})`
@@ -48,7 +56,11 @@ export const NotificationPanel: React.FC = () => {
                         <ul className="actions-container">
                             <li className="action-item">
                                 <a
-                                    className={cn("action-label codicon codicon-clear-all", !notifications.hasNotifications && "disabled")}
+                                    className={cn(
+                                        "action-label codicon codicon-clear-all",
+                                        !notifications.hasNotifications &&
+                                            "disabled",
+                                    )}
                                     onClick={notifications.clear}
                                     role="button"
                                     tabIndex={0}
@@ -56,7 +68,10 @@ export const NotificationPanel: React.FC = () => {
                             </li>
                             <li className="action-item">
                                 <a
-                                    className={cn("action-label codicon", `codicon-${notifications.doNotDisturb ? "bell-slash" : "bell"}`)}
+                                    className={cn(
+                                        "action-label codicon",
+                                        `codicon-${notifications.doNotDisturb ? "bell-slash" : "bell"}`,
+                                    )}
                                     onClick={notifications.toggleDoNotDisturb}
                                     role="button"
                                     tabIndex={0}
@@ -92,10 +107,14 @@ export const NotificationPanel: React.FC = () => {
                 <div className="monaco-notifications-container">
                     <div className="monaco-list mouse-support">
                         {(() => {
-                            const visibleNotifications = notifications.notifications.filter(
-                                (notification) => !notification.hidden
-                            );
-                            const lastNotification = visibleNotifications[visibleNotifications.length - 1];
+                            const visibleNotifications =
+                                notifications.notifications.filter(
+                                    (notification) => !notification.hidden,
+                                );
+                            const lastNotification =
+                                visibleNotifications[
+                                    visibleNotifications.length - 1
+                                ];
 
                             return lastNotification ? (
                                 <Notification
@@ -103,7 +122,9 @@ export const NotificationPanel: React.FC = () => {
                                     notification={lastNotification}
                                     onDismiss={notifications.removeNotification}
                                     showBorder={!notifications.isVisible}
-                                    onFadeIn={notifications.markNotificationFadedIn}
+                                    onFadeIn={
+                                        notifications.markNotificationFadedIn
+                                    }
                                 />
                             ) : null;
                         })()}
@@ -113,4 +134,3 @@ export const NotificationPanel: React.FC = () => {
         </div>
     );
 };
-

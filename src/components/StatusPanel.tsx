@@ -9,7 +9,9 @@ export const StatusPanel: React.FC = () => {
     const { editor } = useEditor();
     const { problems, toggle: toggleProblems } = useProblems();
     const notifications = useNotifications();
-    const [cursor, setCursor] = useState<monaco.Position>(new monaco.Position(1, 1));
+    const [cursor, setCursor] = useState<monaco.Position>(
+        new monaco.Position(1, 1),
+    );
 
     useEffect(() => {
         if (!editor) return;
@@ -19,27 +21,39 @@ export const StatusPanel: React.FC = () => {
             if (!cursor) return;
 
             setCursor(cursor);
-        }
+        };
 
         editor.onDidChangeCursorPosition(onCursorChange);
         editor.onDidChangeCursorSelection(onCursorChange);
     }, [editor]);
 
     return (
-        <div
-            id="monaco-status"
-            className="monaco-editor"
-        >
+        <div id="monaco-status" className="monaco-editor">
             <div className="left-items items-container">
                 <div className="item left" id="status.problems">
-                    <a
-                        className="item-label"
-                        onClick={toggleProblems}
-                    >
+                    <a className="item-label" onClick={toggleProblems}>
                         <span className="codicon codicon-error" />
-                        <span> {problems.filter((problem) => problem.severity === monaco.MarkerSeverity.Error).length} </span>
+                        <span>
+                            {" "}
+                            {
+                                problems.filter(
+                                    (problem) =>
+                                        problem.severity ===
+                                        monaco.MarkerSeverity.Error,
+                                ).length
+                            }{" "}
+                        </span>
                         <span className="codicon codicon-warning" />
-                        <span> {problems.filter((problem) => problem.severity === monaco.MarkerSeverity.Warning).length} </span>
+                        <span>
+                            {" "}
+                            {
+                                problems.filter(
+                                    (problem) =>
+                                        problem.severity ===
+                                        monaco.MarkerSeverity.Warning,
+                                ).length
+                            }{" "}
+                        </span>
                     </a>
                 </div>
             </div>
@@ -65,7 +79,11 @@ export const StatusPanel: React.FC = () => {
                         className="item-label"
                         onClick={() => {
                             editor?.focus();
-                            editor?.trigger("editor", "editor.action.gotoLine", null);
+                            editor?.trigger(
+                                "editor",
+                                "editor.action.gotoLine",
+                                null,
+                            );
                         }}
                     >
                         Ln {cursor.lineNumber}, Col {cursor.column}

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { cn } from "../utils";
 import "./Notification.scss";
 
-export interface NotificationData {
+export type NotificationData = {
     id: string;
     type: monaco.MarkerSeverity;
     label: string;
@@ -12,14 +12,14 @@ export interface NotificationData {
     viewed?: boolean;
     hasFadedIn?: boolean;
     durationStartTime?: number;
-}
+};
 
-interface NotificationProps {
+type NotificationProps = {
     notification: NotificationData;
     onDismiss: (id: string) => void;
     showBorder: boolean;
     onFadeIn?: (id: string) => void;
-}
+};
 
 export const Notification: React.FC<NotificationProps> = ({
     notification,
@@ -29,9 +29,10 @@ export const Notification: React.FC<NotificationProps> = ({
 }) => {
     const durationBarRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const [isFadeIn, setIsFadeIn] = React.useState(notification.hasFadedIn || false);
-    const [durationWidth, setDurationWidth] = React.useState<number | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
+    const [isFadeIn, setIsFadeIn] = useState(notification.hasFadedIn || false);
+
+    const [durationScale, setDurationScale] = useState<number | null>(null);
 
     useEffect(() => {
         if (!notification.hasFadedIn) {
@@ -52,31 +53,35 @@ export const Notification: React.FC<NotificationProps> = ({
             return;
         }
 
-        const updateWidth = () => {
+        const updateScale = () => {
             const now = Date.now();
             const elapsed = now - notification.durationStartTime!;
             const remaining = Math.max(0, notification.expires! - elapsed);
-            const widthPercent = (remaining / notification.expires!) * 101;
+            const scale = remaining / notification.expires!;
 
-            if (widthPercent <= 0) {
-                setDurationWidth(0);
+            if (scale <= 0) {
+                setDurationScale(0);
                 onDismiss(notification.id);
                 return;
             }
 
-            setDurationWidth(widthPercent);
+            setDurationScale(scale);
+            animationFrameRef.current = requestAnimationFrame(updateScale);
         };
 
-        updateWidth();
-
-        intervalRef.current = setInterval(updateWidth, 16);
+        updateScale();
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
+            if (animationFrameRef.current !== null) {
+                cancelAnimationFrame(animationFrameRef.current);
             }
         };
-    }, [notification.expires, notification.id, notification.durationStartTime, onDismiss]);
+    }, [
+        notification.expires,
+        notification.id,
+        notification.durationStartTime,
+        onDismiss,
+    ]);
 
     const severityName = monaco.MarkerSeverity[notification.type].toLowerCase();
     const iconName = severityName === "hint" ? "question" : severityName;
@@ -85,9 +90,16 @@ export const Notification: React.FC<NotificationProps> = ({
     return notification.hidden ? null : (
         <div
             ref={notificationRef}
-            className={cn("monaco-notification", isFadeIn && "fade-in", !showBorder && "no-border", showBorder && "menu-closed")}
+            className={cn(
+                "monaco-notification",
+                isFadeIn && "fade-in",
+                !showBorder && "no-border",
+                showBorder && "menu-closed",
+            )}
         >
-            <div className={`notification-icon codicon codicon-${iconName} ${colorClass}`} />
+            <div
+                className={`notification-icon codicon codicon-${iconName} ${colorClass}`}
+            />
             <div className="notification-text">
                 <span>{notification.label}</span>
             </div>
@@ -109,13 +121,20 @@ export const Notification: React.FC<NotificationProps> = ({
                     ref={durationBarRef}
                     className={cn("notification-duration", colorClass)}
                     style={{
-                        display: durationWidth !== null && durationWidth > 0 ? "block" : "none",
-                        width: durationWidth !== null ? `${durationWidth}%` : "101%",
-                        transition: "width 0.1s linear"
+                        display:
+                            durationScale !== null && durationScale > 0
+                                ? "block"
+                                : "none",
+                        transform:
+                            durationScale !== null
+                                ? `scaleX(${durationScale})`
+                                : "scaleX(1)",
+                        transformOrigin: "left",
+                        transition: "transform 0.1s linear",
+                        willChange: "transform",
                     }}
                 />
             )}
         </div>
     );
 };
-

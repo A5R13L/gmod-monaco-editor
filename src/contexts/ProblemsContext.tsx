@@ -1,15 +1,17 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-interface ProblemsContextType {
+type ProblemsContextType = {
     problems: monaco.editor.IMarkerData[];
     isVisible: boolean;
     show: () => void;
     hide: () => void;
     toggle: () => void;
-}
+};
 
-const ProblemsContext = createContext<ProblemsContextType | undefined>(undefined);
+const ProblemsContext = createContext<ProblemsContextType | undefined>(
+    undefined,
+);
 
 export const useProblems = () => {
     const context = useContext(ProblemsContext);
@@ -21,11 +23,13 @@ export const useProblems = () => {
     return context;
 };
 
-interface ProblemsProviderProps {
+type ProblemsProviderProps = {
     children: React.ReactNode;
-}
+};
 
-export const ProblemsProvider: React.FC<ProblemsProviderProps> = ({ children }) => {
+export const ProblemsProvider: React.FC<ProblemsProviderProps> = ({
+    children,
+}) => {
     const [problems, setProblems] = useState<monaco.editor.IMarkerData[]>([]);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -47,7 +51,9 @@ export const ProblemsProvider: React.FC<ProblemsProviderProps> = ({ children }) 
     const toggle = () => setIsVisible((prev) => !prev);
 
     return (
-        <ProblemsContext.Provider value={{ problems, isVisible, show, hide, toggle }}>
+        <ProblemsContext.Provider
+            value={{ problems, isVisible, show, hide, toggle }}
+        >
             {children}
         </ProblemsContext.Provider>
     );

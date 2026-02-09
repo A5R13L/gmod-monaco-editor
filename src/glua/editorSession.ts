@@ -1,37 +1,55 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import { EditorSessionObject } from "./definitions";
-import { v4 as uuidv4 } from "uuid";
+import {
+    SerializedEditorSession,
+    SessionPublishData,
+} from "./types/definitions";
 
-export class EditorSession implements EditorSessionObject {
-	id: string = uuidv4();
-	name: string = "Unnamed";
-	code: string = "";
-	language: string = "glua";
+function generateId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
 
-	model: monaco.editor.ITextModel = monaco.editor.createModel(
-		this.code,
-		this.language,
-	);
+export class EditorSession implements SerializedEditorSession {
+    id: string = generateId();
+    name: string = "";
+    code: string = "";
+    file: string = "";
+    language: string = "glua";
+    isFocused: boolean = false;
 
-	viewState?: monaco.editor.ICodeEditorViewState;
-	versionId: number = 0;
+    model: monaco.editor.ITextModel = monaco.editor.createModel(
+        this.code,
+        this.language,
+    );
 
-	getSerializable(): EditorSessionObject {
-		return {
-			name: this.name,
-			code: this.code,
-			language: this.language,
-			viewState: this.viewState,
-			versionId: this.model.getAlternativeVersionId(),
-		};
-	}
+    viewState?: monaco.editor.ICodeEditorViewState;
+    versionId: number = 0;
+    publishData?: Partial<SessionPublishData>;
 
-	static fromObject(sessionObj: EditorSessionObject): EditorSession {
-		const newSession = Object.assign(new EditorSession(), sessionObj);
+    serialize(): Partial<SerializedEditorSession> {
+        return {
+            name: this.name,
+            code: this.code,
+            file: this.file,
+            language: this.language,
+            isFocused: this.isFocused,
+            viewState: this.viewState,
+            versionId: this.model.getAlternativeVersionId(),
+        };
+    }
 
-		newSession.model.setValue(newSession.code);
-		monaco.editor.setModelLanguage(newSession.model, newSession.language);
+    static fromObject(
+        sessionObject: Partial<SerializedEditorSession>,
+    ): EditorSession {
+        const newSession = Object.assign(new EditorSession(), sessionObject);
 
-		return newSession;
-	}
+        if (newSession.code && newSession.model)
+            newSession.model.setValue(newSession.code);
+        if (newSession.language && newSession.model)
+            monaco.editor.setModelLanguage(
+                newSession.model,
+                newSession.language,
+            );
+
+        return newSession;
+    }
 }

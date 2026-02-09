@@ -1,37 +1,54 @@
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
+import React, {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { gmodInterface } from "../glua/gmodInterface";
-import { setupExecutionActions, setupSuggestionFix } from "../services/editorActions";
+import {
+    setupExecutionActions,
+    setupSuggestionFix,
+} from "../services/editorActions";
 
-interface EditorContextType {
+type EditorContextType = {
     editor: monaco.editor.IStandaloneCodeEditor | null;
     isReady: boolean;
-}
+    onReadyCalled: boolean;
+    setOnReadyCalled: (onReadyCalled: boolean) => void;
+};
 
 const EditorContext = createContext<EditorContextType>({
     editor: null,
     isReady: false,
+    onReadyCalled: false,
+    setOnReadyCalled: () => {},
 });
 
 export const useEditor = () => {
     return useContext(EditorContext);
 };
 
-interface EditorProviderProps {
+type EditorProviderProps = {
     children: React.ReactNode;
     containerRef?: React.RefObject<HTMLDivElement>;
-}
+};
 
 export const EditorProvider: React.FC<EditorProviderProps> = ({
     children,
     containerRef,
 }) => {
-    const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const [editor, setEditor] =
+        useState<monaco.editor.IStandaloneCodeEditor | null>(null);
     const [isReady, setIsReady] = useState(false);
+    const [onReadyCalled, setOnReadyCalled] = useState(false);
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
     useEffect(() => {
-        const container = containerRef?.current || document.getElementById("monaco-editor-container");
+        const container =
+            containerRef?.current ||
+            document.getElementById("monaco-editor-container");
         if (!container || editorRef.current) return;
 
         const storageService = {
@@ -45,27 +62,33 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
             getNumber() {
                 return 0;
             },
-            remove() { },
-            store() { },
-            onWillSaveState() { },
-            onDidChangeStorage() { },
-            onDidChangeValue() { return () => { } },
+            remove() {},
+            store() {},
+            onWillSaveState() {},
+            onDidChangeStorage() {},
+            onDidChangeValue() {
+                return () => {};
+            },
         };
 
-        const monacoEditor = monaco.editor.create(container, {
-            value: "",
-            language: "glua",
-            theme: "vs-dark",
-            minimap: {
-                enabled: true,
+        const monacoEditor = monaco.editor.create(
+            container,
+            {
+                value: "",
+                language: "glua",
+                theme: "vs-dark",
+                minimap: {
+                    enabled: true,
+                },
+                autoIndent: "full",
+                formatOnPaste: true,
+                formatOnType: true,
+                acceptSuggestionOnEnter: "smart",
             },
-            autoIndent: "full",
-            formatOnPaste: true,
-            formatOnType: true,
-            acceptSuggestionOnEnter: "smart",
-        }, {
-            storageService: storageService,
-        });
+            {
+                storageService: storageService,
+            },
+        );
 
         monacoEditor.focus();
         editorRef.current = monacoEditor;
@@ -73,12 +96,11 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
 
         setupExecutionActions(monacoEditor);
         setupSuggestionFix(monacoEditor);
+        gmodInterface?.SetEditor(monacoEditor);
 
-        if (gmodInterface) {
-            gmodInterface.SetEditor(monacoEditor);
-        }
-
-        (window as any).editor = monacoEditor;
+        (
+            window as Window & { editor?: monaco.editor.IStandaloneCodeEditor }
+        ).editor = monacoEditor;
 
         const handleResize = () => {
             monacoEditor.layout();
@@ -96,10 +118,10 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
     }, [containerRef]);
 
     return (
-        <EditorContext.Provider value={{ editor, isReady }}>
+        <EditorContext.Provider
+            value={{ editor, isReady, onReadyCalled, setOnReadyCalled }}
+        >
             {children}
         </EditorContext.Provider>
     );
 };
-
-

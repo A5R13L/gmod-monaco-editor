@@ -7,8 +7,9 @@ export const MonacoEditor: React.FC = () => {
             style={{
                 width: "100%",
                 height: "100%",
+                paddingBottom: "22px",
+                boxSizing: "border-box",
             }}
         />
     );
 };
-

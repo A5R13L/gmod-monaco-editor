@@ -12,6 +12,7 @@
         transform 0.3s ease-out,
         opacity 0.3s ease-out;
     align-items: center;
+    will-change: transform, opacity;
 
     &:focus {
         outline-color: transparent;
@@ -26,11 +27,11 @@
         border-radius: 0 !important;
     }
 
-    &:not(:hover)>.monaco-action-bar {
+    &:not(:hover) > .monaco-action-bar {
         display: none;
     }
 
-    >.notification-icon {
+    > .notification-icon {
         display: flex;
         align-items: center;
         flex: 0 0 16px;
@@ -41,7 +42,7 @@
         background-repeat: no-repeat;
     }
 
-    >.notification-dismiss-container {
+    > .notification-dismiss-container {
         display: flex;
         align-items: center;
         justify-content: center;
@@ -60,15 +61,15 @@
         }
     }
 
-    &.menu-closed>.notification-dismiss-container {
+    &.menu-closed > .notification-dismiss-container {
         display: none;
     }
 
-    &.menu-closed:hover>.notification-dismiss-container {
+    &.menu-closed:hover > .notification-dismiss-container {
         display: flex;
     }
 
-    >.notification-text {
+    > .notification-text {
         font-size: 13px;
         line-height: 22px;
         overflow: hidden;
@@ -78,12 +79,12 @@
         -webkit-user-select: text;
         color: var(--vscode-foreground);
 
-        >span {
+        > span {
             white-space: normal;
         }
     }
 
-    >.notification-duration {
+    > .notification-duration {
         height: 3px;
         position: absolute;
         bottom: 0;

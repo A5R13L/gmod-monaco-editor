@@ -1,9 +1,16 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useCallback,
+    useEffect,
+    useRef,
+} from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { NotificationData } from "../components/Notification";
 import { useEditor } from "./EditorContext";
 
-interface NotificationContextType {
+export type NotificationContextType = {
     notifications: NotificationData[];
     isVisible: boolean;
     hasNotifications: boolean;
@@ -13,28 +20,41 @@ interface NotificationContextType {
     clear: () => void;
     toggle: () => void;
     addNotification: (notification: Omit<NotificationData, "id">) => void;
+    addNotificationString: (
+        type: string,
+        label: string,
+        expires?: number,
+    ) => void;
     removeNotification: (id: string) => void;
     toggleDoNotDisturb: () => void;
     markNotificationFadedIn: (id: string) => void;
-}
+};
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext = createContext<NotificationContextType | undefined>(
+    undefined,
+);
 
 export const useNotifications = () => {
     const context = useContext(NotificationContext);
 
     if (!context) {
-        throw new Error("useNotifications must be used within NotificationProvider");
+        throw new Error(
+            "useNotifications must be used within NotificationProvider",
+        );
     }
+
+    globalThis.notificationProvider = context;
 
     return context;
 };
 
-interface NotificationProviderProps {
+type NotificationProviderProps = {
     children: React.ReactNode;
-}
+};
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+    children,
+}) => {
     const [notifications, setNotifications] = useState<NotificationData[]>([]);
     const [isVisible, setIsVisible] = useState(false);
     const [doNotDisturb, setDoNotDisturb] = useState(false);
@@ -57,7 +77,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         setNotifications((prev) =>
             prev.map((n) => ({
                 ...n,
-                hidden: notificationsOnOpenRef.current.has(n.id) ? true : n.hidden,
+                hidden: notificationsOnOpenRef.current.has(n.id)
+                    ? true
+                    : n.hidden,
             })),
         );
     }, []);
@@ -68,40 +90,58 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }, []);
 
     const toggle = useCallback(() => {
-        if (isVisible)
-            hide();
-        else
-            show();
+        if (isVisible) hide();
+        else show();
     }, [isVisible, hide, show]);
 
     const removeNotification = useCallback((id: string) => {
         setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, []);
 
-    const addNotification = useCallback((notification: Omit<NotificationData, "id">) => {
-        const id = `notification-${notificationIdCounter.current++}`;
+    const addNotification = useCallback(
+        (notification: Omit<NotificationData, "id">) => {
+            const id = `notification-${notificationIdCounter.current++}`;
 
-        const newNotification: NotificationData = {
-            ...notification,
-            id,
-            durationStartTime: notification.expires ? Date.now() : undefined,
-        };
+            const newNotification: NotificationData = {
+                ...notification,
+                id,
+                durationStartTime: notification.expires
+                    ? Date.now()
+                    : undefined,
+            };
 
-        if (doNotDisturb)
-            newNotification.hidden = true;
+            if (doNotDisturb) newNotification.hidden = true;
 
-        setNotifications((prev) => {
-            const filtered = prev.filter(
-                (n) => !(n.label === notification.label && n.type === notification.type),
-            );
+            setNotifications((prev) => {
+                const filtered = prev.filter(
+                    (n) =>
+                        !(
+                            n.label === notification.label &&
+                            n.type === notification.type
+                        ),
+                );
 
-            const updatedNotifications = !isVisible
-                ? filtered.map((n) => ({ ...n, hidden: true }))
-                : filtered;
+                const updatedNotifications = !isVisible
+                    ? filtered.map((n) => ({ ...n, hidden: true }))
+                    : filtered;
 
-            return [...updatedNotifications, newNotification];
-        });
-    }, [doNotDisturb, isVisible]);
+                return [...updatedNotifications, newNotification];
+            });
+        },
+        [doNotDisturb, isVisible],
+    );
+
+    const addNotificationString = useCallback(
+        (type: string, label: string, expires?: number) => {
+            const severity =
+                monaco.MarkerSeverity[
+                    type as keyof typeof monaco.MarkerSeverity
+                ];
+
+            addNotification({ type: severity, label, expires });
+        },
+        [addNotification],
+    );
 
     const toggleDoNotDisturb = useCallback(() => {
         setDoNotDisturb((prev) => !prev);
@@ -116,11 +156,17 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     useEffect(() => {
         if (!editor) return;
 
-        const hasAToast = editor.createContextKey("notifications.has_a_toast", false as false);
-        const doNotDisturbKey = editor.createContextKey("notifications.do_not_disturb", false as false);
+        const hasAToast = editor.createContextKey<boolean>(
+            "notifications.has_a_toast",
+            false,
+        );
+        const doNotDisturbKey = editor.createContextKey<boolean>(
+            "notifications.do_not_disturb",
+            false,
+        );
 
-        hasAToast.set(notifications.length > 0 as any);
-        doNotDisturbKey.set(doNotDisturb as any);
+        hasAToast.set(notifications.length > 0);
+        doNotDisturbKey.set(doNotDisturb);
 
         editor.addAction({
             id: "editor.command.notifications_show_notifications",
@@ -159,29 +205,16 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
             }
         });
 
-        return () => {
-        };
-    }, [editor, notifications.length, doNotDisturb, show, hide, clear, toggleDoNotDisturb]);
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            (window as any).addNotification = (
-                type: string,
-                label: string,
-                expires?: number,
-            ) => {
-                const severity = monaco.MarkerSeverity[type as keyof typeof monaco.MarkerSeverity];
-
-                if (typeof severity !== "undefined") {
-                    addNotification({
-                        type: severity,
-                        label,
-                        expires,
-                    });
-                }
-            };
-        }
-    }, [addNotification]);
+        return () => {};
+    }, [
+        editor,
+        notifications.length,
+        doNotDisturb,
+        show,
+        hide,
+        clear,
+        toggleDoNotDisturb,
+    ]);
 
     return (
         <NotificationContext.Provider
@@ -195,6 +228,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
                 clear,
                 toggle,
                 addNotification,
+                addNotificationString,
                 removeNotification,
                 toggleDoNotDisturb,
                 markNotificationFadedIn,
@@ -204,4 +238,3 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         </NotificationContext.Provider>
     );
 };
-

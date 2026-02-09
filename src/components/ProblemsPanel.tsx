@@ -10,14 +10,11 @@ export const ProblemsPanel: React.FC = () => {
     const { editor } = useEditor();
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Get current file model
     const currentModel = editor?.getModel();
 
-    // Filter problems for current file, only errors and warnings
     const currentFileProblems = useMemo(() => {
         if (!currentModel) return [];
 
-        // Get markers directly for the current model
         const modelMarkers = monaco.editor.getModelMarkers({
             resource: currentModel.uri,
             owner: "luacheck",
@@ -26,7 +23,7 @@ export const ProblemsPanel: React.FC = () => {
         return modelMarkers.filter(
             (problem) =>
                 problem.severity === monaco.MarkerSeverity.Error ||
-                problem.severity === monaco.MarkerSeverity.Warning
+                problem.severity === monaco.MarkerSeverity.Warning,
         );
     }, [currentModel, problems]);
 
@@ -87,13 +84,18 @@ export const ProblemsPanel: React.FC = () => {
 
     return (
         <div
+            id="monaco-problems"
+            className="monaco-editor"
             ref={containerRef}
-            className="monaco-problems monaco-editor"
             style={{
-                boxShadow: isVisible ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px" : undefined,
+                boxShadow: isVisible
+                    ? "rgba(0, 0, 0, 0.6) 0px 0px 8px 2px"
+                    : undefined,
             }}
         >
-            <div className={cn("monaco-problems-header", !isVisible && "hidden")}>
+            <div
+                className={cn("monaco-problems-header", !isVisible && "hidden")}
+            >
                 <span className="monaco-problems-header-title">
                     {currentFileProblems.length > 0
                         ? `Problems (${currentFileProblems.length})`
@@ -132,13 +134,16 @@ export const ProblemsPanel: React.FC = () => {
                                         className={cn(
                                             "problem-icon codicon",
                                             getSeverityIcon(problem.severity),
-                                            getSeverityColor(problem.severity)
+                                            getSeverityColor(problem.severity),
                                         )}
                                     />
                                     <div className="problem-content">
-                                        <div className="problem-message">{problem.message}</div>
+                                        <div className="problem-message">
+                                            {problem.message}
+                                        </div>
                                         <div className="problem-location">
-                                            Line {problem.startLineNumber}, Col {problem.startColumn}
+                                            Line {problem.startLineNumber}, Col{" "}
+                                            {problem.startColumn}
                                         </div>
                                     </div>
                                 </div>
@@ -150,4 +155,3 @@ export const ProblemsPanel: React.FC = () => {
         </div>
     );
 };
-

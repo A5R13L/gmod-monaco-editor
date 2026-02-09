@@ -1,4 +1,4 @@
-.monaco-notifications {
+#monaco-notifications {
     position: absolute;
     z-index: 1000;
     bottom: 31px;
@@ -12,19 +12,19 @@
         width: 100% !important;
     }
 
-    >.monaco-notifications-header {
+    > .monaco-notifications-header {
         display: flex;
         align-items: center;
         padding-left: 8px;
         padding-right: 5px;
         height: 35px;
 
-        >.monaco-notifications-header-title {
+        > .monaco-notifications-header-title {
             text-transform: uppercase;
             font-size: 11px;
         }
 
-        >.monaco-notifications-header-toolbar {
+        > .monaco-notifications-header-toolbar {
             flex: 1;
 
             .actions-container {
@@ -51,8 +51,12 @@
     &:focus {
         outline-color: transparent;
     }
-}
 
+    .monaco-list {
+        will-change: transform;
+        transform: translateZ(0);
+    }
+}
 
 .monaco-notification-content {
     display: flex;

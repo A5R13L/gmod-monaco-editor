@@ -1,0 +1,185 @@
+#monaco-tabs {
+    display: flex;
+    align-items: center;
+    height: 35px;
+    min-height: 35px;
+    max-height: 35px;
+    flex-shrink: 0;
+    background: var(--vscode-editor-background);
+    border-bottom: 1px solid var(--vscode-dropdown-border);
+    overflow-x: auto;
+    overflow-y: hidden;
+    position: relative;
+    z-index: 1;
+    outline-color: transparent !important;
+
+    > .monaco-tabs-fade-left,
+    > .monaco-tabs-fade-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    > .monaco-tabs-fade-left {
+        left: 0;
+        background: linear-gradient(
+            to right,
+            var(--vscode-editor-background) 0%,
+            transparent 100%
+        );
+    }
+
+    > .monaco-tabs-fade-right {
+        right: 35px;
+        background: linear-gradient(
+            to left,
+            var(--vscode-editor-background) 0%,
+            transparent 100%
+        );
+    }
+
+    > .monaco-tabs-container {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        &::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbarSlider-background);
+            border-radius: 2px;
+
+            &:hover {
+                background: var(--vscode-scrollbarSlider-hoverBackground);
+            }
+        }
+
+        &:hover::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbarSlider-background);
+        }
+
+        > .monaco-tab {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 8px;
+            background: var(--vscode-editor-background);
+            border-right: 1px solid var(--vscode-dropdown-border);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            min-width: 100px;
+            max-width: 200px;
+            position: relative;
+            transition: background 0.1s ease;
+            color: var(--vscode-foreground);
+
+            &:hover {
+                background: var(--vscode-editorHoverWidget-background);
+            }
+
+            &.active {
+                background: var(--vscode-editor-background);
+                border-bottom: 1px solid var(--vscode-dropdown-border);
+                margin-bottom: -1px;
+            }
+
+            > .monaco-tab-label {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 13px;
+                line-height: 35px;
+                padding-right: 4px;
+            }
+
+            > .monaco-tab-input {
+                flex: 1;
+                background: var(--vscode-quickInput-background);
+                border: 1px solid var(--vscode-pickerGroup-border);
+                color: var(--vscode-foreground);
+                font-size: 13px;
+                padding: 2px 4px;
+                margin: 0;
+                outline: none;
+                min-width: 50px;
+            }
+
+            > .monaco-tab-close {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                padding: 0;
+                margin-left: 4px;
+                background: transparent;
+                border: none;
+                color: var(--vscode-input-foreground);
+                cursor: pointer;
+                opacity: 0;
+                transition:
+                    opacity 0.1s ease,
+                    color 0.1s ease;
+                font-size: 14px;
+
+                &:hover {
+                    color: var(--vscode-foreground);
+                    background: var(--vscode-toolbar-hoverBackground);
+                }
+            }
+
+            &:hover > .monaco-tab-close {
+                opacity: 1;
+            }
+
+            &.active > .monaco-tab-close {
+                opacity: 1;
+            }
+
+            &.dragging {
+                opacity: 0.5;
+                cursor: grabbing;
+            }
+
+            &.drag-over {
+                border-left: 2px solid var(--vscode-focusBorder);
+            }
+        }
+    }
+
+    > .monaco-tab-add {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 35px;
+        height: 35px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        color: var(--vscode-input-foreground);
+        cursor: pointer;
+        transition:
+            color 0.1s ease,
+            background 0.1s ease;
+        font-size: 16px;
+        flex-shrink: 0;
+
+        &:hover {
+            color: var(--vscode-quickInput-foreground);
+            background: var(--vscode-toolbar-hoverBackground);
+        }
+    }
+}

@@ -9,6 +9,6 @@
         "scrollbar.shadow": "#00000000"
     },
     "[scss]": {
-        "editor.defaultFormatter": "vscode.css-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
