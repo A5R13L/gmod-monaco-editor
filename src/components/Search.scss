@@ -161,6 +161,27 @@
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
+
+    &::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--vscode-scrollbarSlider-background);
+        border-radius: 5px;
+
+        &:hover {
+            background: var(--vscode-scrollbarSlider-hoverBackground);
+        }
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: var(--vscode-scrollbarSlider-background);
+    }
 }
 
 .search-empty {

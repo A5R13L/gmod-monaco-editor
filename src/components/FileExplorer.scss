@@ -15,6 +15,27 @@
     &:focus {
         outline-color: transparent;
     }
+
+    &::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: var(--vscode-scrollbarSlider-background);
+        border-radius: 5px;
+
+        &:hover {
+            background: var(--vscode-scrollbarSlider-hoverBackground);
+        }
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: var(--vscode-scrollbarSlider-background);
+    }
 }
 
 .file-explorer-empty {
