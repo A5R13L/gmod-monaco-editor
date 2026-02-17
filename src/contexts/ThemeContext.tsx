@@ -65,6 +65,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             const loadedThemes = loader.getLoadedThemes();
             setThemes(loadedThemes);
             setIsLoading(false);
+            window.dispatchEvent(new CustomEvent("monaco-themes.ready"));
         };
 
         loadThemes();
@@ -154,7 +155,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             },
         });
 
-        return () => {};
+        return () => { };
     }, [editor, themes, isLoading, setTheme]);
 
     return (

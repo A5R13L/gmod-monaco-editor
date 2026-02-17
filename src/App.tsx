@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { EditorProvider, useEditor } from "./contexts/EditorContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
@@ -24,8 +24,10 @@ import "./editor.scss";
 
 const AppContentInner: React.FC = () => {
     const { tabBarVisible } = useSessions();
+
     const { isVisible: sidebarPanelVisible, sidebarVisible } =
         useFileExplorer();
+
     const { editor } = useEditor();
 
     useEffect(() => {
@@ -84,8 +86,9 @@ const AppContentInner: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
+    const [autoCompletionInitialized, setAutoCompletionInitialized] = useState(false);
     const initializedRef = useRef(false);
-    const { setOnReadyCalled } = useEditor();
+    const { editor, setOnReadyCalled } = useEditor();
 
     useEffect(() => {
         if (initializedRef.current) return;
@@ -93,17 +96,21 @@ const AppContent: React.FC = () => {
         setupMonacoLanguage();
 
         initializeAutocompletion().then(() => {
-            setTimeout(() => {
-                gmodInterface?.OnReady();
-
-                setTimeout(() => {
-                    setOnReadyCalled(true);
-                }, 100);
-            }, 100);
+            setAutoCompletionInitialized(true);
         });
 
         initializedRef.current = true;
     }, [setOnReadyCalled]);
+
+    useEffect(() => {
+        if (!editor || !autoCompletionInitialized) return;
+
+        gmodInterface?.OnReady();
+
+        setTimeout(() => {
+            setOnReadyCalled(true);
+        }, 100);
+    }, [editor, autoCompletionInitialized]);
 
     return (
         <ThemeProvider>
