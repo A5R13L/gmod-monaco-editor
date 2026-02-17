@@ -124,6 +124,7 @@ export const RightSidebarPanel: React.FC = () => {
                         display: activeView === "explorer" ? "flex" : "none",
                         flexDirection: "column",
                         height: "100%",
+                        minHeight: 0,
                     }}
                 >
                     <FileExplorer />
@@ -133,6 +134,7 @@ export const RightSidebarPanel: React.FC = () => {
                         display: activeView === "search" ? "flex" : "none",
                         flexDirection: "column",
                         height: "100%",
+                        minHeight: 0,
                     }}
                 >
                     <Search />

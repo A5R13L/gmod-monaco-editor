@@ -301,7 +301,7 @@ export const Search: React.FC = () => {
     };
 
     return (
-        <div>
+        <div className="search-container">
             <div className="search-header">
                 <div className="search-input-container">
                     <input
