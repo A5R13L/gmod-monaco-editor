@@ -1,66 +1,70 @@
 export interface VFSTree {
-    [key: string]: string | VFSTree;
+	[key: string]: string | VFSTree;
 }
 
 export type VFSFiles = Map<string, string>;
 
 export class VFS {
-    private files: VFSFiles = new Map();
+	private files: VFSFiles = new Map();
 
-    add(path: string, content: string): void {
-        this.files.set(path, content);
-    }
+	add(path: string, content: string): void {
+		while (this.files.has(path)) {
+			path = path + "_";
+		}
 
-    get(path: string): string | undefined {
-        return this.files.get(path);
-    }
+		this.files.set(path, content);
+	}
 
-    has(path: string): boolean {
-        return this.files.has(path);
-    }
+	get(path: string): string | undefined {
+		return this.files.get(path);
+	}
 
-    remove(path: string): boolean {
-        return this.files.delete(path);
-    }
+	has(path: string): boolean {
+		return this.files.has(path);
+	}
 
-    getAllPaths(): string[] {
-        return Array.from(this.files.keys());
-    }
+	remove(path: string): boolean {
+		return this.files.delete(path);
+	}
 
-    getAll(): VFSTree {
-        const treeResult: VFSTree = {};
+	getAllPaths(): string[] {
+		return Array.from(this.files.keys());
+	}
 
-        for (const [path, content] of this.files.entries()) {
-            const normalizedPath = path.replace(/\\/g, "/");
-            const pathParts = normalizedPath
-                .split("/")
-                .filter((part) => part.length > 0);
-            let current = treeResult;
+	getAll(): VFSTree {
+		const treeResult: VFSTree = {};
 
-            for (let i = 0; i < pathParts.length; i++) {
-                const part = pathParts[i];
-                const isLast = i === pathParts.length - 1;
+		for (const [path, content] of this.files.entries()) {
+			const normalizedPath = path.replace(/\\/g, "/");
+			const pathParts = normalizedPath
+				.split("/")
+				.filter((part) => part.length > 0);
+			let current = treeResult;
 
-                if (isLast) {
-                    current[part] = content;
-                } else {
-                    if (!current[part] || typeof current[part] !== "object") {
-                        current[part] = {};
-                    }
+			for (let i = 0; i < pathParts.length; i++) {
+				const part = pathParts[i];
+				const isLast = i === pathParts.length - 1;
 
-                    current = current[part];
-                }
-            }
-        }
+				if (isLast) {
+					current[part] = content;
+				} else {
+					if (!current[part] || typeof current[part] !== "object") {
+						current[part] = {};
+					}
 
-        return treeResult;
-    }
+					current = current[part];
+				}
+			}
+		}
 
-    clear(): void {
-        this.files.clear();
-    }
+		return treeResult;
+	}
 
-    size(): number {
-        return this.files.size;
-    }
+	clear(): void {
+		this.files.clear();
+	}
+
+	size(): number {
+		return this.files.size;
+	}
 }
