@@ -93,10 +93,12 @@ const AppContent: React.FC = () => {
         setupMonacoLanguage();
 
         initializeAutocompletion().then(() => {
-            gmodInterface?.OnReady();
-
             setTimeout(() => {
-                setOnReadyCalled(true);
+                gmodInterface?.OnReady();
+
+                setTimeout(() => {
+                    setOnReadyCalled(true);
+                }, 100);
             }, 100);
         });
 
