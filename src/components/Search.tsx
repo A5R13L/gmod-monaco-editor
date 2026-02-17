@@ -301,7 +301,7 @@ export const Search: React.FC = () => {
     };
 
     return (
-        <div id="monaco-search" className="monaco-editor">
+        <div>
             <div className="search-header">
                 <div className="search-input-container">
                     <input

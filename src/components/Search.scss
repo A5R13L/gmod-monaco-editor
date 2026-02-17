@@ -1,16 +1,3 @@
-#monaco-search {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-foreground);
-    overflow: hidden;
-    outline-color: transparent !important;
-    flex: 1;
-    min-height: 0;
-}
-
 .search-header {
     padding: 8px;
     border-bottom: 1px solid var(--vscode-dropdown-border);

@@ -1,36 +1,3 @@
-.file-explorer-header {
-    display: flex;
-    align-items: center;
-    padding-left: 8px;
-    padding-right: 5px;
-    height: 35px;
-    border-bottom: 1px solid var(--vscode-dropdown-border);
-    flex-shrink: 0;
-
-    .file-explorer-title {
-        text-transform: uppercase;
-        font-size: 11px;
-        color: var(--vscode-foreground);
-        font-weight: 600;
-    }
-
-    .file-explorer-header-toolbar {
-        flex: 1;
-
-        .actions-container {
-            justify-content: flex-end;
-        }
-
-        .action-item {
-            margin-right: 4px;
-
-            &:first-child {
-                margin-left: 4px;
-            }
-        }
-    }
-}
-
 .file-explorer-content {
     flex: 1;
     overflow-y: auto;
