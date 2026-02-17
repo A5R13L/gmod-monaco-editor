@@ -21,7 +21,12 @@ type SessionsContextType = {
     setActiveSession: (name: string) => void;
     closeSession: (sessionName?: string, switchTo?: string) => void;
     reorderSessions: (sessionNames: string[]) => void;
-    createSession: (name?: string) => void;
+    createSession: (
+        name?: string,
+        code?: string,
+        file?: string,
+        language?: string,
+    ) => void;
     renameSession: (newName: string, oldName?: string) => boolean;
     setTabBarVisible: (visible: boolean) => void;
 };
@@ -97,7 +102,7 @@ export const SessionsProvider: React.FC<SessionsProviderProps> = ({
     const setActiveSession = useCallback(
         (name: string) => {
             gmodInterface?.SetActiveSession(name);
-            setTimeout(updateSessions, 0);
+            requestAnimationFrame(updateSessions);
         },
         [updateSessions],
     );
@@ -105,7 +110,7 @@ export const SessionsProvider: React.FC<SessionsProviderProps> = ({
     const closeSession = useCallback(
         (sessionName?: string, switchTo?: string) => {
             gmodInterface?.CloseSession(sessionName, switchTo);
-            setTimeout(updateSessions, 0);
+            requestAnimationFrame(updateSessions);
         },
         [updateSessions],
     );
@@ -113,19 +118,22 @@ export const SessionsProvider: React.FC<SessionsProviderProps> = ({
     const reorderSessions = useCallback(
         (sessionNames: string[]) => {
             gmodInterface?.ReorderSessions(sessionNames);
-            setTimeout(updateSessions, 0);
+            requestAnimationFrame(updateSessions);
         },
         [updateSessions],
     );
 
     const createSession = useCallback(
-        (name?: string) => {
+        (name?: string, code?: string, file?: string, language?: string) => {
             gmodInterface?.CreateSession({
                 name,
+                code,
+                file,
+                language,
                 isFocused: true,
             });
 
-            setTimeout(updateSessions, 0);
+            requestAnimationFrame(updateSessions);
         },
         [updateSessions],
     );
@@ -148,7 +156,8 @@ export const SessionsProvider: React.FC<SessionsProviderProps> = ({
             }
 
             gmodInterface?.RenameSession(newName, oldName);
-            setTimeout(updateSessions, 0);
+            requestAnimationFrame(updateSessions);
+
             return true;
         },
         [updateSessions],

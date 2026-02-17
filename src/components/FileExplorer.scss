@@ -1,0 +1,131 @@
+.file-explorer-header {
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    padding-right: 5px;
+    height: 35px;
+    border-bottom: 1px solid var(--vscode-dropdown-border);
+    flex-shrink: 0;
+
+    .file-explorer-title {
+        text-transform: uppercase;
+        font-size: 11px;
+        color: var(--vscode-foreground);
+        font-weight: 600;
+    }
+
+    .file-explorer-header-toolbar {
+        flex: 1;
+
+        .actions-container {
+            justify-content: flex-end;
+        }
+
+        .action-item {
+            margin-right: 4px;
+
+            &:first-child {
+                margin-left: 4px;
+            }
+        }
+    }
+}
+
+.file-explorer-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &:focus {
+        outline-color: transparent;
+    }
+}
+
+.file-explorer-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--vscode-descriptionForeground);
+    font-size: 13px;
+}
+
+.file-explorer-tree {
+    padding: 4px 0;
+}
+
+.file-explorer-node {
+    user-select: none;
+}
+
+.file-explorer-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    min-height: 22px;
+    gap: 4px;
+
+    &:hover {
+        background: var(--vscode-list-hoverBackground);
+    }
+
+    .codicon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--vscode-icon-foreground);
+    }
+
+    .file-explorer-item-name {
+        font-size: 13px;
+        line-height: 22px;
+        color: var(--vscode-foreground);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.file-explorer-file {
+    .codicon {
+        color: var(--vscode-icon-foreground);
+    }
+}
+
+.file-explorer-children {
+    display: flex;
+    flex-direction: column;
+}
+
+.monaco-action-bar {
+    white-space: nowrap;
+    height: 100%;
+
+    .actions-container {
+        display: flex;
+        margin: 0 auto;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        align-items: center;
+    }
+}
+
+.action-label:not(.disabled):hover {
+    background: rgba(90, 93, 94, 0.31);
+    cursor: pointer;
+}
+
+.action-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 2px;
+    border-radius: 2px;
+}

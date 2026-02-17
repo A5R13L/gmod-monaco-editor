@@ -31,7 +31,6 @@ export const Notification: React.FC<NotificationProps> = ({
     const notificationRef = useRef<HTMLDivElement>(null);
     const animationFrameRef = useRef<number | null>(null);
     const [isFadeIn, setIsFadeIn] = useState(notification.hasFadedIn || false);
-
     const [durationScale, setDurationScale] = useState<number | null>(null);
 
     useEffect(() => {

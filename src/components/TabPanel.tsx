@@ -78,7 +78,7 @@ export const TabPanel: React.FC = () => {
     }, [updateScrollIndicators, sessions]);
 
     useEffect(() => {
-        setTimeout(updateScrollIndicators, 0);
+        requestAnimationFrame(updateScrollIndicators);
     }, [sessions, updateScrollIndicators]);
 
     useEffect(() => {
@@ -103,7 +103,7 @@ export const TabPanel: React.FC = () => {
 
         if (!activeTab) return;
 
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             if (!tabsScrollRef.current || !activeTab) return;
 
             const container = tabsScrollRef.current;
@@ -125,7 +125,7 @@ export const TabPanel: React.FC = () => {
                     behavior: "smooth",
                 });
             }
-        }, 0);
+        });
     }, [currentSession?.name]);
 
     const handleTabClick = (sessionName: string) => {
@@ -215,9 +215,9 @@ export const TabPanel: React.FC = () => {
         if (code.trim()) {
             setActiveSession(session.name);
 
-            setTimeout(() => {
+            requestAnimationFrame(() => {
                 gmodInterface?.OnSessionImported(session.serialize(), code);
-            }, 0);
+            });
         }
     };
 

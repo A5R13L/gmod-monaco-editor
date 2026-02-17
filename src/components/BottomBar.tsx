@@ -3,9 +3,9 @@ import { useEditor } from "../contexts/EditorContext";
 import { useProblems } from "../contexts/ProblemsContext";
 import { useNotifications } from "../contexts/NotificationContext";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import "./StatusPanel.scss";
+import "./BottomBar.scss";
 
-export const StatusPanel: React.FC = () => {
+export const BottomBar: React.FC = () => {
     const { editor } = useEditor();
     const { problems, toggle: toggleProblems } = useProblems();
     const notifications = useNotifications();
@@ -28,9 +28,9 @@ export const StatusPanel: React.FC = () => {
     }, [editor]);
 
     return (
-        <div id="monaco-status" className="monaco-editor">
+        <div id="monaco-bottom-bar" className="monaco-editor">
             <div className="left-items items-container">
-                <div className="item left" id="status.problems">
+                <div className="item left" id="bottom-bar.problems">
                     <a className="item-label" onClick={toggleProblems}>
                         <span className="codicon codicon-error" />
                         <span>
@@ -59,7 +59,7 @@ export const StatusPanel: React.FC = () => {
             </div>
 
             <div className="right-items items-container">
-                <div className="item right" id="status.notifications">
+                <div className="item right" id="bottom-bar.notifications">
                     <a
                         className="item-label notification-bell-container"
                         onClick={() => {
@@ -74,7 +74,7 @@ export const StatusPanel: React.FC = () => {
                     </a>
                 </div>
 
-                <div className="item right" id="status.selection">
+                <div className="item right" id="bottom-bar.selection">
                     <a
                         className="item-label"
                         onClick={() => {
