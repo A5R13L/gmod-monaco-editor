@@ -12,6 +12,11 @@ export class VFS {
 			path = path + "_";
 		}
 
+		try {
+			content = atob(content);
+		} catch {
+		}
+
 		this.files.set(path, content);
 	}
 
