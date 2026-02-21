@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useEditor } from "../contexts/EditorContext";
 import { useProblems } from "../contexts/ProblemsContext";
 import { useNotifications } from "../contexts/NotificationContext";
@@ -8,6 +8,17 @@ import "./BottomBar.scss";
 export const BottomBar: React.FC = () => {
     const { editor } = useEditor();
     const { problems, toggle: toggleProblems } = useProblems();
+    const currentModel = editor?.getModel();
+
+    const currentFileProblems = useMemo(() => {
+        if (!currentModel) return [];
+
+        return monaco.editor.getModelMarkers({
+            resource: currentModel.uri,
+            owner: "luacheck",
+        });
+    }, [currentModel, problems]);
+
     const notifications = useNotifications();
     const [cursor, setCursor] = useState<monaco.Position>(
         new monaco.Position(1, 1),
@@ -36,7 +47,7 @@ export const BottomBar: React.FC = () => {
                         <span>
                             {" "}
                             {
-                                problems.filter(
+                                currentFileProblems.filter(
                                     (problem) =>
                                         problem.severity ===
                                         monaco.MarkerSeverity.Error,
@@ -47,7 +58,7 @@ export const BottomBar: React.FC = () => {
                         <span>
                             {" "}
                             {
-                                problems.filter(
+                                currentFileProblems.filter(
                                     (problem) =>
                                         problem.severity ===
                                         monaco.MarkerSeverity.Warning,
