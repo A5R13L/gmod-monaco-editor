@@ -66,6 +66,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
             setThemes(loadedThemes);
             setIsLoading(false);
             window.dispatchEvent(new CustomEvent("monaco-themes.ready"));
+            gmodInterface?.OnThemesLoaded(loadedThemes.map(theme => theme.id));
         };
 
         loadThemes();

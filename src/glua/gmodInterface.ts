@@ -71,6 +71,7 @@ if (!globalThis.gmodInterface) {
 		OnCode: interfaceLogger("OnCode"),
 		OpenURL: interfaceLogger("OpenURL"),
 		OnThemeChanged: interfaceLogger("OnThemeChanged"),
+		OnThemesLoaded: interfaceLogger("OnThemesLoaded"),
 		OnSessionFocus: interfaceLogger("OnSessionFocus"),
 		OnSessionUpdate: interfaceLogger("OnSessionUpdate"),
 		OnSessionExported: interfaceLogger("OnSessionExported"),
