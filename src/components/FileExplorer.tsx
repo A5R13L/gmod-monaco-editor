@@ -14,7 +14,7 @@ interface TreeNodeProps {
     level: number;
     expanded: Set<string>;
     onToggle: (path: string) => void;
-    onFileClick: (path: string, content: string) => void;
+    onFileClick: (path: string) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -32,7 +32,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
     const handleClick = () => {
         if (isFile) {
-            onFileClick(path, node);
+            onFileClick(path);
         } else {
             onToggle(path);
         }
@@ -96,20 +96,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
 export const FileExplorer: React.FC = () => {
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
-    const [vfsTree, setVfsTree] = useState<VFSTree>({});
+    const [vfsVersion, setVfsVersion] = useState(() => vfs.getVersion());
     const { editor } = useEditor();
 
     useEffect(() => {
-        const updateTree = () => {
-            setVfsTree(vfs.getAll());
-        };
-
-        updateTree();
-
-        const interval = setInterval(updateTree, 500);
-
-        return () => clearInterval(interval);
+        return vfs.subscribe(setVfsVersion);
     }, []);
+
+    const vfsTree = useMemo(
+        () => vfs.getStructure(),
+        [vfsVersion],
+    );
 
     const handleToggle = (path: string) => {
         setExpanded((prev) => {
@@ -123,12 +120,14 @@ export const FileExplorer: React.FC = () => {
         });
     };
 
-    const handleFileClick = (path: string, content: string) => {
+    const handleFileClick = (path: string) => {
         if (!editor || !gmodInterface) return;
+
+        const code = vfs.get(path) ?? "";
 
         gmodInterface.CreateSession({
             name: path.split("/").pop() || "untitled",
-            code: content,
+            code,
             file: path,
             language: "glua",
             isFocused: true,
