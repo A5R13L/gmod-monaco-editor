@@ -155,6 +155,31 @@ export const ThemeEditor: React.FC = () => {
         closeThemeEditor();
     }, [closeThemeEditor, setTheme]);
 
+    const handleDelete = useCallback(() => {
+        const session = sessionRef.current;
+        const id = draft?.id;
+
+        if (!session || session.isUnsavedFork || !id || !isUserTheme(id)) {
+            return;
+        }
+
+        if (!window.confirm(`Delete theme "${draft.name}"?`)) return;
+
+        themeLoader.removeTheme(id);
+        gmodInterface?.OnThemeDeleted(id);
+
+        const fallback =
+            session.previousThemeId && session.previousThemeId !== id
+                ? session.previousThemeId
+                : "vs-dark";
+
+        setTheme(fallback);
+
+        sessionRef.current = null;
+        setDraft(null);
+        closeThemeEditor();
+    }, [closeThemeEditor, draft, setTheme]);
+
     const handleSave = useCallback(() => {
         if (!draft) return;
 
@@ -300,21 +325,34 @@ export const ThemeEditor: React.FC = () => {
             </div>
 
             <div className="monaco-theme-editor-footer">
-                <button
-                    type="button"
-                    className="theme-editor-button secondary"
-                    onClick={handleCancel}
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    className="theme-editor-button"
-                    disabled={!canSave}
-                    onClick={handleSave}
-                >
-                    Save
-                </button>
+                <div className="monaco-theme-editor-footer-start">
+                    {idReadOnly && isUserTheme(draft.id) && (
+                        <button
+                            type="button"
+                            className="theme-editor-button danger"
+                            onClick={handleDelete}
+                        >
+                            Delete
+                        </button>
+                    )}
+                </div>
+                <div className="monaco-theme-editor-footer-end">
+                    <button
+                        type="button"
+                        className="theme-editor-button secondary"
+                        onClick={handleCancel}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        className="theme-editor-button"
+                        disabled={!canSave}
+                        onClick={handleSave}
+                    >
+                        Save
+                    </button>
+                </div>
             </div>
         </div>
     );

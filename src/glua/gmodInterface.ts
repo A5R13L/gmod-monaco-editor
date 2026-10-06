@@ -81,6 +81,7 @@ if (!globalThis.gmodInterface) {
 		OnAction: interfaceLogger("OnAction"),
 		OnExecute: interfaceLogger("OnExecute"),
 		OnThemeSaved: interfaceLogger("OnThemeSaved"),
+		OnThemeDeleted: interfaceLogger("OnThemeDeleted"),
 	};
 }
 
@@ -147,6 +148,23 @@ if (globalThis.gmodInterface) {
 
 		AddThemes(themes: ThemeDefinition[]) {
 			themeLoader.addThemes(themes);
+		},
+
+		RemoveTheme(themeId: string) {
+			const removed = themeLoader.removeTheme(themeId);
+
+			if (!removed) return false;
+
+			const editor = this.editor || globalThis.monacoEditor;
+
+			// @ts-ignore
+			const currentTheme = editor?._themeService?.getColorTheme()?.themeName;
+
+			if (currentTheme === themeId) {
+				monaco.editor.setTheme("vs-dark");
+			}
+
+			return true;
 		},
 
 		GetThemes() {

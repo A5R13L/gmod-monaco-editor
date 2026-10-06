@@ -136,11 +136,18 @@
 
 .monaco-theme-editor-footer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
     padding: 8px 12px;
     flex-shrink: 0;
     border-top: 1px solid var(--vscode-dropdown-border);
+}
+
+.monaco-theme-editor-footer-start,
+.monaco-theme-editor-footer-end {
+    display: flex;
+    gap: 8px;
 }
 
 .theme-editor-button {
@@ -167,6 +174,15 @@
 
         &:hover:not(:disabled) {
             background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground));
+        }
+    }
+
+    &.danger {
+        background: var(--vscode-inputValidation-errorBorder, #f14c4c);
+        color: #ffffff;
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
         }
     }
 }

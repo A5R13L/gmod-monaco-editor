@@ -74,6 +74,7 @@ export type GmodInterface = {
     OnAction(actionId: string): void;
     OnExecute(realm: string, code: string): void;
     OnThemeSaved(theme: ThemeDefinition): void;
+    OnThemeDeleted(themeId: string): void;
 };
 
 export type ExtendedGmodInterface = GmodInterface & {
@@ -88,6 +89,7 @@ export type ExtendedGmodInterface = GmodInterface & {
     SetTheme(themeName: string): void;
     AddTheme(theme: ThemeDefinition): void;
     AddThemes(themes: ThemeDefinition[]): void;
+    RemoveTheme(themeId: string): boolean;
     GetThemes(): Theme[];
     SetLanguage(langId: string): void;
     GotoLine(line: number): void;
