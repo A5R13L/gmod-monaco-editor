@@ -12,6 +12,7 @@ import {
     definitionToDraft,
     draftToDefinition,
     isHexColor,
+    isUserTheme,
     sanitizeThemeId,
     uniqueCustomId,
 } from "../themeEditor";
@@ -58,8 +59,11 @@ export const ThemeEditor: React.FC = () => {
 
             let id = sanitizeThemeId(nextDraft.id) || session.previewId;
 
-            if (themeLoader.isBuiltin(id) && !themeLoader.isCustom(id)) {
-                id = uniqueCustomId(nextDraft.name || id);
+            if (
+                id !== session.previewId &&
+                (themeLoader.isBuiltin(id) || themeLoader.isCustom(id))
+            ) {
+                id = uniqueCustomId(nextDraft.name || id, session.previewId);
             }
 
             nextDraft.id = id;
@@ -93,17 +97,20 @@ export const ThemeEditor: React.FC = () => {
         const liveThemeId = editor._themeService?.getColorTheme()?.themeName;
         const sourceId = liveThemeId || currentTheme;
         const sourceMeta = themes.find((theme) => theme.id === sourceId);
-        const custom = themeLoader.getCustomTheme(sourceId);
+        const sourceDefinition = themeLoader.getCustomTheme(sourceId);
+        const editInPlace = Boolean(sourceDefinition && isUserTheme(sourceId));
         let nextDraft: ThemeEditorDraft;
         let isUnsavedFork = false;
 
-        if (custom) {
-            nextDraft = definitionToDraft(custom);
+        if (editInPlace && sourceDefinition) {
+            nextDraft = definitionToDraft(sourceDefinition);
         } else {
-            const seeded = createDraftFromEditor(editor, {
-                id: sourceId,
-                name: sourceMeta?.name || sourceId,
-            });
+            const seeded = sourceDefinition
+                ? definitionToDraft(sourceDefinition)
+                : createDraftFromEditor(editor, {
+                      id: sourceId,
+                      name: sourceMeta?.name || sourceId,
+                  });
             const name = `${seeded.name} Custom`;
 
             nextDraft = {
@@ -118,7 +125,9 @@ export const ThemeEditor: React.FC = () => {
 
         sessionRef.current = {
             previousThemeId: sourceId,
-            original: custom ? definitionToDraft(custom) : null,
+            original: editInPlace && sourceDefinition
+                ? definitionToDraft(sourceDefinition)
+                : null,
             isUnsavedFork,
             previewId: nextDraft.id,
             idTouched: !isUnsavedFork,

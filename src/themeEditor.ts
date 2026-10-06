@@ -67,6 +67,10 @@ const LIGHT_DEFAULTS = {
 	},
 };
 
+export function isUserTheme(id: string): boolean {
+	return id.startsWith("custom-");
+}
+
 export function sanitizeThemeId(id: string): string {
 	return id
 		.trim()
