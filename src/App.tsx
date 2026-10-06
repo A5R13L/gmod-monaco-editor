@@ -11,6 +11,7 @@ import {
 import { MonacoEditor } from "./components/MonacoEditor";
 import { NotificationPanel } from "./components/NotificationPanel";
 import { ProblemsPanel } from "./components/ProblemsPanel";
+import { ThemeEditor } from "./components/ThemeEditor";
 import { BottomBar } from "./components/BottomBar";
 import { TabPanel } from "./components/TabPanel";
 import { RightSidebar } from "./components/RightSidebar";
@@ -74,6 +75,7 @@ const AppContentInner: React.FC = () => {
                     }}
                 >
                     <MonacoEditor />
+                    <ThemeEditor />
                     <NotificationPanel />
                     <ProblemsPanel />
                     <BottomBar />

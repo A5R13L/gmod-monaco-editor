@@ -19,6 +19,7 @@ import {
 	SessionPublishData,
 	Snippet,
 } from "./types/definitions";
+import { themeLoader, ThemeDefinition } from "../themeLoader";
 
 export const editorSessions: Map<string, EditorSession> = new Map();
 export var gmodInterface: ExtendedGmodInterface | undefined;
@@ -79,6 +80,7 @@ if (!globalThis.gmodInterface) {
 		OnSessionPublished: interfaceLogger("OnSessionPublished"),
 		OnAction: interfaceLogger("OnAction"),
 		OnExecute: interfaceLogger("OnExecute"),
+		OnThemeSaved: interfaceLogger("OnThemeSaved"),
 	};
 }
 
@@ -137,6 +139,18 @@ if (globalThis.gmodInterface) {
 
 		SetTheme(themeName: string) {
 			monaco.editor.setTheme(themeName);
+		},
+
+		AddTheme(theme: ThemeDefinition) {
+			themeLoader.addTheme(theme);
+		},
+
+		AddThemes(themes: ThemeDefinition[]) {
+			themeLoader.addThemes(themes);
+		},
+
+		GetThemes() {
+			return themeLoader.getLoadedThemes();
 		},
 
 		SetLanguage(langId: string) {

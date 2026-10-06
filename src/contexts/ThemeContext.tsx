@@ -4,11 +4,10 @@ import React, {
     useEffect,
     useState,
     useCallback,
-    useRef,
 } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { IQuickInputService } from "monaco-editor/esm/vs/platform/quickinput/common/quickInput";
-import { ThemeLoader, Theme } from "../themeLoader";
+import { themeLoader, Theme } from "../themeLoader";
 import { gmodInterface } from "../glua/gmodInterface";
 import { useEditor } from "./EditorContext";
 
@@ -17,6 +16,9 @@ type ThemeContextType = {
     currentTheme: string;
     setTheme: (themeId: string) => void;
     isLoading: boolean;
+    isThemeEditorOpen: boolean;
+    openThemeEditor: () => void;
+    closeThemeEditor: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -54,15 +56,30 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     const [themes, setThemes] = useState<Theme[]>([]);
     const [currentTheme, setCurrentTheme] = useState<string>("vs-dark");
     const [isLoading, setIsLoading] = useState(true);
-    const themeLoaderRef = useRef<ThemeLoader | null>(null);
+    const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
     const { editor } = useEditor();
 
+    const openThemeEditor = useCallback(() => {
+        setIsThemeEditorOpen(true);
+    }, []);
+
+    const closeThemeEditor = useCallback(() => {
+        setIsThemeEditorOpen(false);
+    }, []);
+
     useEffect(() => {
+        let unsubscribe = () => {};
+
         const loadThemes = async () => {
-            const loader = new ThemeLoader();
-            themeLoaderRef.current = loader;
-            await loader.loadThemes();
-            const loadedThemes = loader.getLoadedThemes();
+            unsubscribe = themeLoader.subscribe((updatedThemes) => {
+                setThemes(updatedThemes);
+                gmodInterface?.OnThemesLoaded(
+                    updatedThemes.map((theme) => theme.id),
+                );
+            });
+
+            await themeLoader.loadThemes();
+            const loadedThemes = themeLoader.getLoadedThemes();
             setThemes(loadedThemes);
             setIsLoading(false);
             window.dispatchEvent(new CustomEvent("monaco-themes.ready"));
@@ -70,6 +87,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         };
 
         loadThemes();
+
+        return () => unsubscribe();
     }, []);
 
     const setTheme = useCallback((themeId: string) => {
@@ -92,6 +111,14 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
                 func(accessor.get(IQuickInputService));
             },
         );
+
+        editor.addAction({
+            id: "editor.command.edit_theme",
+            label: "Preferences: Edit Color Theme",
+            run: () => {
+                openThemeEditor();
+            },
+        });
 
         editor.addAction({
             id: "editor.command.set_theme",
@@ -157,11 +184,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         });
 
         return () => { };
-    }, [editor, themes, isLoading, setTheme]);
+    }, [editor, themes, isLoading, setTheme, openThemeEditor]);
 
     return (
         <ThemeContext.Provider
-            value={{ themes, currentTheme, setTheme, isLoading }}
+            value={{
+                themes,
+                currentTheme,
+                setTheme,
+                isLoading,
+                isThemeEditorOpen,
+                openThemeEditor,
+                closeThemeEditor,
+            }}
         >
             {children}
         </ThemeContext.Provider>
