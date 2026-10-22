@@ -136,19 +136,28 @@ function addEnum(
     }
 
     enums.forEach((element: WikiEnumItem) => {
+        if (!element) return;
+
         if (element.items) {
             addEnum(element, description);
-
+        
             return;
         }
 
-        const enumObj = new GluaEnum(element);
+        const rawKey = (element as { key?: unknown }).key;
+        const keys = Array.isArray(rawKey) ? rawKey : [rawKey
+                                                      ];
+        for (const key of keys) {
+            if (typeof key !== "string" || key.trim() === "") continue;
 
-        if (autocompletionData.valuesLookup.has(enumObj.key)) return;
+            const enumObj = new GluaEnum({ ...element, key });
+            
+            if (autocompletionData.valuesLookup.has(enumObj.key)) continue;
 
-        enumObj.tableDesc = description?.text || "";
-        autocompletionData.valuesLookup.set(enumObj.key, enumObj);
-        autocompletionData.enums.push(enumObj);
+            enumObj.tableDesc = description?.text || "";
+            autocompletionData.valuesLookup.set(enumObj.key, enumObj);
+            autocompletionData.enums.push(enumObj);
+        }
     });
 }
 
