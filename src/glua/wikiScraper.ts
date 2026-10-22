@@ -140,7 +140,7 @@ function addEnum(
 
         if (element.items) {
             addEnum(element, description);
-        
+
             return;
         }
 
