@@ -85,6 +85,12 @@ export const EditorProvider: React.FC<EditorProviderProps> = ({
                 formatOnPaste: true,
                 formatOnType: true,
                 acceptSuggestionOnEnter: "smart",
+                quickSuggestions: {
+                    other: "on",
+                    comments: "off",
+                    strings: "on",
+                },
+                suggestOnTriggerCharacters: true,
             },
             {
                 storageService: storageService,

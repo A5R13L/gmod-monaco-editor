@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { vfs } from "../glua/gmodInterface";
 import { VFSTree } from "../glua/vfs";
 import { useEditor } from "../contexts/EditorContext";
-import { useFileExplorer } from "../contexts/FileExplorerContext";
 import { gmodInterface } from "../glua/gmodInterface";
 import "./FileExplorer.scss";
 import { cn } from "../utils";

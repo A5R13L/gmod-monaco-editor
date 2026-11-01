@@ -11,7 +11,7 @@ const DEFAULT_WIDTH = 300;
 const STORAGE_KEY = "right-sidebar-width";
 
 export const RightSidebarPanel: React.FC = () => {
-    const { isVisible, activeView, setActiveView } = useFileExplorer();
+    const { isVisible, activeView } = useFileExplorer();
     const { editor } = useEditor();
     const [width, setWidth] = useState(() => {
         const saved = localStorage.getItem(STORAGE_KEY);

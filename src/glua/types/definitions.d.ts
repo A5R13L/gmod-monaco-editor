@@ -3,8 +3,13 @@ import { EditorSession } from "../editorSession";
 import { NotificationContextType } from "../../contexts/NotificationContext";
 import { VFS } from "../vfs";
 import { Theme, ThemeDefinition } from "../../themeLoader";
+import type {
+    AutocompleteRequestContext,
+    DynamicAutocompleteItem,
+} from "../../completionProvider";
 
 export type { Theme, ThemeDefinition };
+export type { AutocompleteRequestContext, DynamicAutocompleteItem };
 
 export type LuaReportEvent = {
     message: string;
@@ -75,6 +80,10 @@ export type GmodInterface = {
     OnExecute(realm: string, code: string): void;
     OnThemeSaved(theme: ThemeDefinition): void;
     OnThemeDeleted(themeId: string): void;
+    OnAutocompleteRequest?(
+        context: AutocompleteRequestContext,
+        requestId: number,
+    ): void;
 };
 
 export type ExtendedGmodInterface = GmodInterface & {
@@ -127,6 +136,20 @@ export type ExtendedGmodInterface = GmodInterface & {
     AddSnippet(name: string, code: string): void;
     LoadSnippets(snippets: { name: string; code: string }[]): void;
 
+    EnableDynamicAutocomplete(timeoutMs?: number): void;
+    DisableDynamicAutocomplete(): void;
+    ProvideAutocompleteItems(
+        requestId: number,
+        items: DynamicAutocompleteItem[],
+    ): void;
+    SetDynamicAutocompleteTimeout(timeoutMs: number): void;
+
+    _autocompleteCallbacks?: Map<
+        number,
+        (items: DynamicAutocompleteItem[]) => void
+    >;
+    _autocompleteRequestId?: number;
+
     AddAction(action: EditorAction): void;
 };
 
@@ -143,8 +166,9 @@ export type Snippet = {
 export type EditorAction = {
     id: string;
     label: string;
-    keyBindings: string[];
-    contextMenuGroup: string;
+    keyBindings?: string[];
+    contextMenuGroup?: string;
+    precondition?: string;
 };
 
 export type SuggestController = {

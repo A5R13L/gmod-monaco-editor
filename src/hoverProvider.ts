@@ -6,7 +6,7 @@ export class GLuaHoverProvider implements monaco.languages.HoverProvider {
     provideHover(
         model: monaco.editor.ITextModel,
         position: monaco.Position,
-        token: monaco.CancellationToken,
+        _token: monaco.CancellationToken,
     ): monaco.languages.ProviderResult<monaco.languages.Hover> {
         const lineUntil = model
             .getLineContent(position.lineNumber)

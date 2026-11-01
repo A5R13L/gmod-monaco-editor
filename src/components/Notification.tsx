@@ -34,17 +34,19 @@ export const Notification: React.FC<NotificationProps> = ({
     const [durationScale, setDurationScale] = useState<number | null>(null);
 
     useEffect(() => {
-        if (!notification.hasFadedIn) {
-            const timer = setTimeout(() => {
-                setIsFadeIn(true);
-
-                if (onFadeIn) {
-                    onFadeIn(notification.id);
-                }
-            }, 10);
-
-            return () => clearTimeout(timer);
+        if (notification.hasFadedIn) {
+            return;
         }
+
+        const timer = setTimeout(() => {
+            setIsFadeIn(true);
+
+            if (onFadeIn) {
+                onFadeIn(notification.id);
+            }
+        }, 10);
+
+        return () => clearTimeout(timer);
     }, [notification.hasFadedIn, notification.id, onFadeIn]);
 
     useEffect(() => {

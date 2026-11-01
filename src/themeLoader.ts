@@ -170,81 +170,52 @@ export class ThemeLoader {
 			},
 		];
 
-		let themeList = [
-			"active4d",
-			"all_hallows_eve",
-			"amy",
-			"birds_of_paradise",
-			"blackboard",
-			"brilliance_black",
-			"brilliance_dull",
-			"chrome_devtools",
-			"clouds_midnight",
-			"clouds",
-			"cobalt_2",
-			"cobalt",
-			"dawn",
-			"dominion_day",
-			"dracula",
-			"dreamweaver",
-			"eiffel",
-			"espresso_libre",
-			"github_dark",
-			"github_light",
-			"github",
-			"i_plastic",
-			"idle_fingers",
-			"idle",
-			"katzenmilch",
-			"kr",
-			"kurior",
-			"lazy",
-			"magicwb_amiga",
-			"merbivore_soft",
-			"merbivore",
-			"mono_industrial",
-			"monokai_bright",
-			"monokai",
-			"night_owl",
-			"nord",
-			"oceanic_next",
-			"pastels_on_dark",
-			"slush_and_poppies",
-			"solarized_dark",
-			"solarized_light",
-			"space_cadet",
-			"sunburst",
-			"textmate_mac_classic",
-			"tomorrow_night_blue",
-			"tomorrow_night_bright",
-			"tomorrow_night_eighties",
-			"tomorrow_night",
-			"tomorrow",
-			"twilight",
-			"upstream_sunburst",
-			"vibrant_ink",
-			"xcode_default",
-			"zenburnesque",
-		];
-
 		try {
-			for (let themeId of themeList) {
-				let themeData = await import(`../themes/${themeId}.json`);
+			const ctx = (
+				import.meta as ImportMeta & {
+					webpackContext: (
+						path: string,
+						options: {
+							regExp: RegExp;
+							mode: string;
+						},
+					) => {
+						keys: () => string[];
+						(key: string): Promise<ThemeDefinition & { name?: string }>;
+					};
+				}
+			).webpackContext("../themes", {
+				regExp: /\.json$/,
+				mode: "lazy-once",
+			});
 
-				themeId = themeId.replace(/_/g, "-");
+			await Promise.all(
+				ctx
+					.keys()
+					.filter((key) => !key.includes("themelist"))
+					.map(async (key) => {
+						const raw = await ctx(key);
+						const stem = key.replace(/^\.\//, "").replace(/\.json$/, "");
+						const id = stem.replace(/_/g, "-");
 
-				this.builtinThemes.push({
-					id: themeId,
-					name: themeData.name,
-				});
+						const entry = this.applyThemeData({
+							id,
+							name: raw.name ?? id,
+							base: raw.base,
+							inherit: raw.inherit,
+							rules: raw.rules,
+							colors: raw.colors,
+						});
 
-				monaco.editor.defineTheme(themeId, themeData);
-			}
+						if (entry) this.builtinThemes.push(entry);
+					}),
+			);
 		} catch (err) {
-			console.log(`Failed to load theme: ${err}`);
+			console.log(`Failed to load themes: ${err}`);
 		}
 
 		this.builtinsLoaded = true;
+		this.notify();
 	}
 
 	getLoadedThemes(): Theme[] {

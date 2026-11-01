@@ -20,6 +20,12 @@ import {
 	Snippet,
 } from "./types/definitions";
 import { themeLoader, ThemeDefinition } from "../themeLoader";
+import { parseKeybinding } from "../services/keybindings";
+import {
+	setDynamicAutocompleteProvider,
+	setDynamicAutocompleteTimeout,
+} from "../completionProvider";
+import type { DynamicAutocompleteItem } from "../completionProvider";
 
 export const editorSessions: Map<string, EditorSession> = new Map();
 export var gmodInterface: ExtendedGmodInterface | undefined;
@@ -695,24 +701,74 @@ if (globalThis.gmodInterface) {
 			autocompletionData.ClearGlobalAutocompletionCache();
 		},
 
+		_autocompleteCallbacks: undefined as
+			| Map<number, (items: DynamicAutocompleteItem[]) => void>
+			| undefined,
+		_autocompleteRequestId: 0,
+
+		EnableDynamicAutocomplete(timeoutMs?: number) {
+			if (!this.OnAutocompleteRequest) {
+				console.warn(
+					"[EnableDynamicAutocomplete] OnAutocompleteRequest callback not defined",
+				);
+				return;
+			}
+
+			this._autocompleteCallbacks = new Map();
+			this._autocompleteRequestId = 0;
+
+			if (timeoutMs !== undefined) {
+				setDynamicAutocompleteTimeout(timeoutMs);
+			}
+
+			const self = this;
+			setDynamicAutocompleteProvider((context, callback) => {
+				const requestId = self._autocompleteRequestId!++;
+				self._autocompleteCallbacks!.set(requestId, callback);
+				self.OnAutocompleteRequest!(context, requestId);
+			});
+		},
+
+		DisableDynamicAutocomplete() {
+			setDynamicAutocompleteProvider(undefined);
+			this._autocompleteCallbacks?.clear();
+		},
+
+		ProvideAutocompleteItems(
+			requestId: number,
+			items: DynamicAutocompleteItem[],
+		) {
+			const callback = this._autocompleteCallbacks?.get(requestId);
+			if (callback) {
+				this._autocompleteCallbacks!.delete(requestId);
+				callback(items);
+			}
+		},
+
+		SetDynamicAutocompleteTimeout(timeoutMs: number) {
+			setDynamicAutocompleteTimeout(timeoutMs);
+		},
+
 		AddAction(action: EditorAction) {
 			const newAction: monaco.editor.IActionDescriptor = {
 				id: action.id,
 				label: action.label,
 				contextMenuGroupId: action.contextMenuGroup,
 				keybindings: [],
+				precondition: action.precondition,
 				run: () => {
 					this.OnAction(action.id);
 				},
 			};
 
-			if (action.keyBindings)
-				action.keyBindings.forEach((object: string) => {
-					object = object.replace(/Mod\./g, "monaco.KeyMod.");
-					object = object.replace(/Key\./g, "monaco.KeyCode.");
-
-					newAction.keybindings!.push(eval(object));
-				});
+			if (action.keyBindings) {
+				for (const binding of action.keyBindings) {
+					const parsed = parseKeybinding(binding);
+					if (parsed !== 0) {
+						newAction.keybindings!.push(parsed);
+					}
+				}
+			}
 
 			this.editor.addAction(newAction);
 		},

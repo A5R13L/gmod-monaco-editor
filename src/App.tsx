@@ -32,15 +32,15 @@ const AppContentInner: React.FC = () => {
     const { editor } = useEditor();
 
     useEffect(() => {
-        if (editor) {
-            let rafId: number | null = null;
-
-            rafId = requestAnimationFrame(() => {
-                editor.layout();
-            });
-
-            return () => cancelAnimationFrame(rafId);
+        if (!editor) {
+            return;
         }
+
+        const rafId = requestAnimationFrame(() => {
+            editor.layout();
+        });
+
+        return () => cancelAnimationFrame(rafId);
     }, [tabBarVisible, sidebarPanelVisible, editor]);
 
     return (

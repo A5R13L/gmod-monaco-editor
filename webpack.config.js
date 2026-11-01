@@ -1,15 +1,30 @@
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
+const webpack = require("webpack");
 const path = require("path");
+const fs = require("fs");
 const TerserPlugin = require("terser-webpack-plugin");
 
 const smp = new SpeedMeasurePlugin();
 
+const patchTarget =
+    "node_modules/monaco-editor/esm/vs/editor/common/services/findSectionHeaders.js";
+if (!fs.existsSync(path.resolve(__dirname, patchTarget))) {
+    throw new Error(
+        `Monaco patch target not found: ${patchTarget}\n` +
+            "The findSectionHeaders patch may need updating for this Monaco version.",
+    );
+}
+
+const isDev = Boolean(process.env.WEBPACK_SERVE);
+
 const config = {
-    mode: "production",
+    mode: isDev ? "development" : "production",
+    cache: isDev ? { type: "filesystem" } : undefined,
     entry: {
-        index: "./src/index.tsx",
+        polyfills: "./src/polyfills.ts",
+        index: { import: "./src/index.tsx", dependOn: "polyfills" },
     },
     watchOptions: {
         ignored: /node_modules/,
@@ -18,6 +33,19 @@ const config = {
         globalObject: "self",
         filename: "[name].bundle.js",
         path: path.resolve(__dirname, "dist"),
+        environment: {
+            arrowFunction: true,
+            bigIntLiteral: false,
+            const: true,
+            destructuring: true,
+            dynamicImport: true,
+            dynamicImportInWorker: false,
+            forOf: true,
+            globalThis: true,
+            module: false,
+            optionalChaining: true,
+            templateLiteral: true,
+        },
     },
     module: {
         rules: [
@@ -28,15 +56,12 @@ const config = {
                 options: {
                     presets: [
                         [
-                            "@babel/env",
+                            "@babel/preset-env",
                             {
-                                targets: {
-                                    browsers: [
-                                        "> 1%",
-                                        "last 2 versions",
-                                        "not dead",
-                                    ],
-                                },
+                                targets: { chrome: "86" },
+                                useBuiltIns: "usage",
+                                corejs: 3,
+                                bugfixes: true,
                                 modules: false,
                             },
                         ],
@@ -47,6 +72,24 @@ const config = {
                             },
                         ],
                         "@babel/preset-typescript",
+                    ],
+                },
+            },
+            {
+                test: /\.js$/,
+                include: /node_modules[\\/]monaco-editor/,
+                loader: "babel-loader",
+                options: {
+                    presets: [
+                        [
+                            "@babel/preset-env",
+                            {
+                                targets: { chrome: "86" },
+                                useBuiltIns: "usage",
+                                corejs: 3,
+                                bugfixes: true,
+                            },
+                        ],
                     ],
                 },
             },
@@ -66,36 +109,75 @@ const config = {
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js", ".json"],
+        fallback: {
+            path: require.resolve("path-browserify"),
+            fs: false,
+        },
     },
     plugins: [
+        new webpack.ProvidePlugin({
+            process: require.resolve("process/browser"),
+        }),
+        new webpack.NormalModuleReplacementPlugin(
+            /monaco-editor\/esm\/.*\/findSectionHeaders\.js$/,
+            path.resolve(__dirname, "src/patches/findSectionHeaders.js"),
+        ),
         new MonacoWebpackPlugin({
             languages: ["lua"],
-            features: [],
+            features: [
+                "bracketMatching",
+                "clipboard",
+                "codeAction",
+                "colorPicker",
+                "comment",
+                "contextmenu",
+                "cursorUndo",
+                "find",
+                "folding",
+                "fontZoom",
+                "format",
+                "hover",
+                "indentation",
+                "linesOperations",
+                "links",
+                "multicursor",
+                "parameterHints",
+                "quickCommand",
+                "quickOutline",
+                "smartSelect",
+                "suggest",
+                "wordHighlighter",
+                "wordOperations",
+            ],
             filename: "[name].worker.js",
             publicPath: "./",
         }),
         new HtmlWebpackPlugin({
             inject: true,
             template: "views/index.html",
+            chunks: ["polyfills", "index"],
+            chunksSortMode: "manual",
         }),
     ],
     optimization: {
-        minimize: true,
-        minimizer: [
-            new TerserPlugin({
-                terserOptions: {
-                    compress: {
-                        drop_console: false,
-                        passes: 2,
-                        pure_funcs: ["console.debug"],
-                    },
-                    format: {
-                        comments: false,
-                    },
-                },
-                extractComments: false,
-            }),
-        ],
+        minimize: !isDev,
+        minimizer: isDev
+            ? []
+            : [
+                  new TerserPlugin({
+                      terserOptions: {
+                          compress: {
+                              drop_console: false,
+                              passes: 2,
+                              pure_funcs: ["console.debug"],
+                          },
+                          format: {
+                              comments: false,
+                          },
+                      },
+                      extractComments: false,
+                  }),
+              ],
         usedExports: true,
         sideEffects: false,
         moduleIds: "deterministic",
@@ -121,7 +203,10 @@ const config = {
             },
         },
     },
-    devtool: process.env.WEBPACK_SERVE ? "eval" : undefined,
+    performance: {
+        hints: false,
+    },
+    devtool: isDev ? "eval-cheap-module-source-map" : undefined,
     devServer: {
         static: {
             directory: path.join(__dirname, "dist"),
@@ -136,4 +221,7 @@ const config = {
     },
 };
 
-module.exports = process.env.WEBPACK_SERVE ? smp.wrap(config) : config;
+const exported =
+    process.env.WEBPACK_MEASURE === "1" ? smp.wrap(config) : config;
+
+module.exports = exported;

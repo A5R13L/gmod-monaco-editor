@@ -1,6 +1,7 @@
 import { autocompletionData } from "./autocompletionData";
 import { GluaFunc } from "./luaFunc";
 import { GluaEnum } from "./luaEnum";
+import { enumPageFromLink, resolveEnumPage } from "./wikiLinks";
 import axios from "axios";
 
 type WikiElementExample = {
@@ -41,21 +42,26 @@ type WikiElement = {
     rets?: WikiElementRets[] | WikiElementRetsWrapper;
     description?: string | WikiElementDescription;
     example?: WikiElementExample | WikiElementExample[];
+    link?: string;
     [key: string]: unknown;
 };
 
 type WikiEnumItem = {
+    key?: string;
     items?: unknown;
     description?: WikiElementDescription;
+    realm?: string;
     [key: string]: unknown;
 };
 
 export type WikiScraperData = {
     realms: string[];
+    link?: string;
     function?: WikiElement;
     enum?: WikiEnumItem | WikiEnumItem[];
     example?: WikiElementExample | WikiElementExample[];
     description?: WikiElementDescription;
+    realm?: string;
     [key: string]: unknown;
 };
 
@@ -102,51 +108,71 @@ function PreprocessGWikiElem(
 
 function addEnum(
     elem: WikiEnumItem | WikiEnumItem[],
-    parentDescription?: WikiElementDescription,
+    link?: string,
+    parentMeta?: { description?: WikiElementDescription; realm?: string },
 ) {
     if (Array.isArray((elem as { enum?: unknown }).enum)) {
         (elem as { enum: unknown[] }).enum.forEach((element: unknown) => {
-            addEnum({ items: element } as WikiEnumItem, parentDescription);
+            addEnum({ items: element } as WikiEnumItem, link, parentMeta);
         });
         return;
     }
 
     let enums: WikiEnumItem[];
-    let description: WikiElementDescription | undefined = parentDescription;
+    let container: WikiEnumItem;
 
     if (Array.isArray(elem)) {
         enums = elem;
+        container = { description: parentMeta?.description };
     } else {
-        const enumItem = elem as WikiEnumItem;
-        description = enumItem.description || parentDescription;
+        container = elem as WikiEnumItem;
         if (
-            enumItem.items &&
-            typeof enumItem.items === "object" &&
-            "item" in enumItem.items
+            container.items &&
+            typeof container.items === "object" &&
+            "item" in container.items
         ) {
-            const itemsWrapper = enumItem.items as {
+            const itemsWrapper = container.items as {
                 item: WikiEnumItem | WikiEnumItem[];
             };
             enums = Array.isArray(itemsWrapper.item)
                 ? itemsWrapper.item
                 : [itemsWrapper.item];
         } else {
-            enums = [enumItem];
+            enums = [container];
         }
     }
 
+    const wikiPage =
+        enumPageFromLink(link) ??
+        resolveEnumPage(
+            enums
+                .map((element) => element.key)
+                .filter((key): key is string => typeof key === "string"),
+        );
+
     enums.forEach((element: WikiEnumItem) => {
         if (element.items) {
-            addEnum(element, description);
+            addEnum(element, link, {
+                description: container.description ?? parentMeta?.description,
+                realm: container.realm ?? parentMeta?.realm,
+            });
 
             return;
         }
 
         const enumObj = new GluaEnum(element);
 
+        if (!enumObj.key) return;
         if (autocompletionData.valuesLookup.has(enumObj.key)) return;
 
-        enumObj.tableDesc = description?.text || "";
+        enumObj.tableDesc =
+            container.description ?? parentMeta?.description ?? "";
+        enumObj.realm =
+            enumObj.realm ??
+            container.realm ??
+            parentMeta?.realm ??
+            "";
+        enumObj.wikiPage = wikiPage;
         autocompletionData.valuesLookup.set(enumObj.key, enumObj);
         autocompletionData.enums.push(enumObj);
     });
@@ -156,11 +182,47 @@ let scrapedWikiData: WikiScraperData[];
 const request = axios.create({});
 
 async function FetchGwiki() {
-    scrapedWikiData = (
-        await request.get(
-            "https://metastruct.github.io/gmod-wiki-scraper/gwiki.json",
-        )
-    ).data as WikiScraperData[];
+    try {
+        scrapedWikiData = (
+            await request.get(
+                "https://metastruct.github.io/gmod-wiki-scraper/gwiki.json",
+            )
+        ).data as WikiScraperData[];
+    } catch (err) {
+        console.error("[wikiScraper] Failed to load gwiki.json:", err);
+        scrapedWikiData = [];
+    }
+}
+
+/** All GM hook names for hook.Add, regardless of Client/Server realm filter. */
+function mergeGmHooksFromWiki(): void {
+    if (!scrapedWikiData) return;
+
+    const seen = new Set(autocompletionData.hooks.map((hook) => hook.name));
+
+    for (const elem of scrapedWikiData) {
+        const funcElem = elem.function;
+        if (
+            !funcElem ||
+            funcElem.type !== "hook" ||
+            funcElem.parent !== "GM" ||
+            typeof funcElem.name !== "string"
+        ) {
+            continue;
+        }
+        if (seen.has(funcElem.name)) continue;
+
+        PreprocessGWikiElem(funcElem, elem);
+        funcElem.link = elem.link;
+
+        const func = new GluaFunc(funcElem);
+        autocompletionData.hooks.push(func);
+        seen.add(func.name);
+
+        if (!autocompletionData.valuesLookup.has(func.name)) {
+            autocompletionData.valuesLookup.set(func.name, func);
+        }
+    }
 }
 
 export async function LoadAutocompletionData(currentState: string) {
@@ -176,6 +238,8 @@ export async function LoadAutocompletionData(currentState: string) {
 
             PreprocessGWikiElem(funcElem, elem);
 
+            funcElem.link = elem.link;
+
             const func = new GluaFunc(funcElem);
 
             autocompletionData.valuesLookup.set(func.getFullName(), func);
@@ -193,9 +257,15 @@ export async function LoadAutocompletionData(currentState: string) {
                 autocompletionData.valuesLookup.set(func.name, func);
                 autocompletionData.hooks.push(func);
             } else autocompletionData.functions.push(func);
-        } else if (elem.enum) addEnum(elem.enum);
+        } else if (elem.enum) {
+            addEnum(elem.enum, elem.link, {
+                description: elem.description,
+                realm: elem.realm,
+            });
+        }
     });
 
+    mergeGmHooksFromWiki();
     autocompletionData.ClearAutocompleteCache();
 }
 
@@ -206,6 +276,8 @@ export function AddCustomData(elems: WikiScraperData[]) {
 
             PreprocessGWikiElem(funcElem, elem);
 
+            funcElem.link = elem.link;
+
             const func = new GluaFunc(funcElem);
 
             autocompletionData.valuesLookup.set(func.getFullName(), func);
@@ -223,8 +295,14 @@ export function AddCustomData(elems: WikiScraperData[]) {
                 autocompletionData.valuesLookup.set(func.name, func);
                 autocompletionData.hooks.push(func);
             } else autocompletionData.functions.push(func);
-        } else if (elem.enum) addEnum(elem.enum);
+        } else if (elem.enum) {
+            addEnum(elem.enum, elem.link, {
+                description: elem.description,
+                realm: elem.realm,
+            });
+        }
     });
 
+    mergeGmHooksFromWiki();
     autocompletionData.ClearAutocompleteCache();
 }

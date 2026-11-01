@@ -292,14 +292,22 @@ class AutocompletionData {
         const hookSuggestions: monaco.languages.CompletionItem[] = [];
 
         autocompletionData.hooks.forEach((hook: GluaFunc) => {
-            if (hook.parent !== "GM") return;
+            if (hook.parent !== "GM") {
+                return;
+            }
+
+            const desc =
+                typeof hook.description?.text === "string"
+                    ? hook.description.text
+                    : "";
 
             const item = {
                 label: `"${hook.name}"`,
                 kind: monaco.languages.CompletionItemKind.Event,
                 detail: hook.generateUsageText(),
-                documentation: hook.description.text,
+                documentation: desc,
                 insertText: addQuotes ? `"${hook.name}"` : hook.name,
+                filterText: hook.name,
                 range,
             };
 
@@ -308,6 +316,7 @@ class AutocompletionData {
 
         return {
             suggestions: hookSuggestions,
+            incomplete: true,
         };
     }
     AddNewInterfaceValue(val: GluaInterface) {
