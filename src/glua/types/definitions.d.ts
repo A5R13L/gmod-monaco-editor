@@ -6,10 +6,17 @@ import { Theme, ThemeDefinition } from "../../themeLoader";
 import type {
     AutocompleteRequestContext,
     DynamicAutocompleteItem,
+    DynamicAutocompleteOptions,
+    DynamicAutocompleteResponse,
 } from "../../completionProvider";
 
 export type { Theme, ThemeDefinition };
-export type { AutocompleteRequestContext, DynamicAutocompleteItem };
+export type {
+    AutocompleteRequestContext,
+    DynamicAutocompleteItem,
+    DynamicAutocompleteOptions,
+    DynamicAutocompleteResponse,
+};
 
 export type LuaReportEvent = {
     message: string;
@@ -141,12 +148,13 @@ export type ExtendedGmodInterface = GmodInterface & {
     ProvideAutocompleteItems(
         requestId: number,
         items: DynamicAutocompleteItem[],
+        options?: DynamicAutocompleteOptions,
     ): void;
     SetDynamicAutocompleteTimeout(timeoutMs: number): void;
 
     _autocompleteCallbacks?: Map<
         number,
-        (items: DynamicAutocompleteItem[]) => void
+        (response: DynamicAutocompleteResponse) => void
     >;
     _autocompleteRequestId?: number;
 

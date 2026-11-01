@@ -29,7 +29,19 @@ export interface DynamicAutocompleteItem {
     isSnippet?: boolean;
 }
 
-type DynamicAutocompleteCallback = (items: DynamicAutocompleteItem[]) => void;
+export interface DynamicAutocompleteOptions {
+    /** When true, only dynamic items are shown (static/wiki completions are skipped). */
+    replaceStatic?: boolean;
+}
+
+export type DynamicAutocompleteResponse =
+    | DynamicAutocompleteItem[]
+    | {
+          items: DynamicAutocompleteItem[];
+          replaceStatic?: boolean;
+      };
+
+type DynamicAutocompleteCallback = (response: DynamicAutocompleteResponse) => void;
 type DynamicAutocompleteProvider = (
     context: AutocompleteRequestContext,
     callback: DynamicAutocompleteCallback,
@@ -139,6 +151,36 @@ export function sanitizeCompletionList(list: CompletionList): CompletionList {
     };
 }
 
+function normalizeDynamicResponse(
+    response: DynamicAutocompleteResponse,
+): { items: DynamicAutocompleteItem[]; replaceStatic: boolean } {
+    if (Array.isArray(response)) {
+        return { items: response, replaceStatic: false };
+    }
+
+    return {
+        items: response.items ?? [],
+        replaceStatic: !!response.replaceStatic,
+    };
+}
+
+function dynamicItemsToSuggestions(
+    items: DynamicAutocompleteItem[],
+    insertRange: IRange,
+): monaco.languages.CompletionItem[] {
+    const suggestions: monaco.languages.CompletionItem[] = [];
+
+    for (const item of items) {
+        if (typeof item.label !== "string" || item.label.length === 0) {
+            continue;
+        }
+
+        suggestions.push(convertDynamicItem(item, insertRange));
+    }
+
+    return suggestions;
+}
+
 export function requestDynamicCompletions(
     context: AutocompleteRequestContext,
     insertRange: IRange,
@@ -158,10 +200,26 @@ export function requestDynamicCompletions(
             }
         }, dynamicAutocompleteTimeout);
 
-        dynamicAutocompleteProvider!(context, (items) => {
+        dynamicAutocompleteProvider!(context, (response) => {
             if (resolved) return;
             resolved = true;
             clearTimeout(timeoutId);
+
+            const { items, replaceStatic } =
+                normalizeDynamicResponse(response);
+
+            if (replaceStatic) {
+                resolve(
+                    sanitizeCompletionList({
+                        suggestions: dynamicItemsToSuggestions(
+                            items,
+                            insertRange,
+                        ),
+                        incomplete: items.length > 0,
+                    }),
+                );
+                return;
+            }
 
             if (!items || items.length === 0) {
                 resolve(staticCompletions);

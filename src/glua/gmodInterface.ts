@@ -25,7 +25,11 @@ import {
 	setDynamicAutocompleteProvider,
 	setDynamicAutocompleteTimeout,
 } from "../completionProvider";
-import type { DynamicAutocompleteItem } from "../completionProvider";
+import type {
+	DynamicAutocompleteItem,
+	DynamicAutocompleteOptions,
+	DynamicAutocompleteResponse,
+} from "../completionProvider";
 
 export const editorSessions: Map<string, EditorSession> = new Map();
 export var gmodInterface: ExtendedGmodInterface | undefined;
@@ -702,7 +706,7 @@ if (globalThis.gmodInterface) {
 		},
 
 		_autocompleteCallbacks: undefined as
-			| Map<number, (items: DynamicAutocompleteItem[]) => void>
+			| Map<number, (response: DynamicAutocompleteResponse) => void>
 			| undefined,
 		_autocompleteRequestId: 0,
 
@@ -737,11 +741,15 @@ if (globalThis.gmodInterface) {
 		ProvideAutocompleteItems(
 			requestId: number,
 			items: DynamicAutocompleteItem[],
+			options?: DynamicAutocompleteOptions,
 		) {
 			const callback = this._autocompleteCallbacks?.get(requestId);
 			if (callback) {
 				this._autocompleteCallbacks!.delete(requestId);
-				callback(items);
+				callback({
+					items,
+					replaceStatic: options?.replaceStatic,
+				});
 			}
 		},
 
