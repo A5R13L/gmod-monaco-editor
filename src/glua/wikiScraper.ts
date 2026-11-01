@@ -151,6 +151,8 @@ function addEnum(
         );
 
     enums.forEach((element: WikiEnumItem) => {
+        if (!element) return;
+
         if (element.items) {
             addEnum(element, link, {
                 description: container.description ?? parentMeta?.description,
@@ -160,21 +162,27 @@ function addEnum(
             return;
         }
 
-        const enumObj = new GluaEnum(element);
+        const rawKey = (element as { key?: unknown }).key;
+        const keys = Array.isArray(rawKey) ? rawKey : [rawKey];
+        for (const key of keys) {
+            if (typeof key !== "string" || key.trim() === "") continue;
 
-        if (!enumObj.key) return;
-        if (autocompletionData.valuesLookup.has(enumObj.key)) return;
+            const enumObj = new GluaEnum({ ...element, key });
 
-        enumObj.tableDesc =
-            container.description ?? parentMeta?.description ?? "";
-        enumObj.realm =
-            enumObj.realm ??
-            container.realm ??
-            parentMeta?.realm ??
-            "";
-        enumObj.wikiPage = wikiPage;
-        autocompletionData.valuesLookup.set(enumObj.key, enumObj);
-        autocompletionData.enums.push(enumObj);
+            if (!enumObj.key) continue;
+            if (autocompletionData.valuesLookup.has(enumObj.key)) continue;
+
+            enumObj.tableDesc =
+                container.description ?? parentMeta?.description ?? "";
+            enumObj.realm =
+                enumObj.realm ??
+                container.realm ??
+                parentMeta?.realm ??
+                "";
+            enumObj.wikiPage = wikiPage;
+            autocompletionData.valuesLookup.set(enumObj.key, enumObj);
+            autocompletionData.enums.push(enumObj);
+        }
     });
 }
 
